@@ -1,8 +1,10 @@
-[gd_scene load_steps=6 format=4 uid="uid://cc7nwj1biibuw"]
+[gd_scene load_steps=8 format=3 uid="uid://cc7nwj1biibuw"]
 
 [ext_resource type="Texture2D" uid="uid://di6y38yu85dr2" path="res://4_Seasons_Ground_Tiles.png" id="1_ruedu"]
+[ext_resource type="Script" path="res://level.gd" id="2_2idh2"]
 [ext_resource type="PackedScene" uid="uid://umydvt437mmv" path="res://Player.tscn" id="2_cq4we"]
 [ext_resource type="PackedScene" uid="uid://c4drp01fqj2e7" path="res://Enemy.tscn" id="3_3ige2"]
+[ext_resource type="PackedScene" uid="uid://ba12pskq3mu7k" path="res://Tile.tscn" id="5_mdl2r"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ojr4x"]
 texture = ExtResource("1_ruedu")
@@ -95,11 +97,14 @@ texture = ExtResource("1_ruedu")
 sources/0 = SubResource("TileSetAtlasSource_ojr4x")
 
 [node name="Level" type="TileMapLayer"]
-tile_map_data = PackedByteArray("AAAAAAAAAAADAAAAAAABAAAAAAAFAAAAAAACAAAAAAADAAAAAAADAAAAAAAGAAAAAAABAAEAAAAFAAMAAAACAAEAAAADAAAAAAACAAIAAAAGAAAAAAAAAAEAAAAEAAAAAAABAAIAAAADAAAAAAABAAMAAAADAAAAAAAAAAMAAAAGAAAAAAAAAAIAAAADAAAAAAADAAEAAAADAAAAAAACAAMAAAADAAAAAAADAAIAAAADAAAAAAADAAMAAAAEAAAAAAA=")
 tile_set = SubResource("TileSet_uuxwi")
+script = ExtResource("2_2idh2")
 
 [node name="Player" parent="." instance=ExtResource("2_cq4we")]
 position = Vector2(16, 32)
 
 [node name="Enemy" parent="." instance=ExtResource("3_3ige2")]
 position = Vector2(32, 16)
+
+[node name="Tile" parent="." instance=ExtResource("5_mdl2r")]
+position = Vector2(8, 8)
