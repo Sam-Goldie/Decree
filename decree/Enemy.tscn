@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://c4drp01fqj2e7"]
+
+[ext_resource type="Texture2D" uid="uid://br3n70ti57btw" path="res://Enemy.png" id="1_xvn8d"]
+
+[node name="Enemy" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_xvn8d")
+offset = Vector2(8, 8)
