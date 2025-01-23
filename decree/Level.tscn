@@ -107,4 +107,5 @@ position = Vector2(16, 32)
 position = Vector2(32, 16)
 
 [node name="Tile" parent="." instance=ExtResource("5_mdl2r")]
+visible = false
 position = Vector2(8, 8)

@@ -2,12 +2,10 @@
 
 [ext_resource type="Script" path="res://button.gd" id="1_ev0i2"]
 
-[node name="Tile" type="Node2D"]
-scale = Vector2(2, 2)
-
-[node name="Button" type="Button" parent="."]
+[node name="Tile" type="Button"]
 offset_right = 8.0
 offset_bottom = 8.0
 script = ExtResource("1_ev0i2")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)

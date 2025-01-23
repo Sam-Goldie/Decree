@@ -1,9 +1,14 @@
 extends Button
 
+@onready
+var player = Level.player
+
+signal move_player(position)
 
 func _ready():
-	self.pressed.connect(move_player)
+	self.pressed.connect(move)
 	
-func move_player():
-	print("hello world")
+func move():
+	print(self.position)
+	player.position = self.position
 	
