@@ -5,6 +5,7 @@
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_7bac1"]
 
 [node name="Tile" type="Button"]
+self_modulate = Color(1, 1, 1, 0)
 offset_right = 8.0
 offset_bottom = 8.0
 icon = SubResource("CompressedTexture2D_7bac1")
