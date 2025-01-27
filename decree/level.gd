@@ -1,11 +1,11 @@
 extends TileMapLayer
 
-#var player_class = preload("res://Player.tscn")
+var player_class = preload("res://Player.tscn")
 var enemy_scene = preload("res://Enemy.tscn")
 var tile_scene = preload("res://Tile.tscn")
 
 @onready
-var player = $Player
+var player = player_class.instantiate()
 @onready
 var board = [[enemy_scene.instantiate(), null, null, null], [null, player, null, null], [null, null, enemy_scene.instantiate(), null],[null, null, null, null]]
 
@@ -33,7 +33,8 @@ func _ready():
 
 func _on_tile_pressed(target):
 	var board_position = player.position / 16
-	board[board_position[1]][board_position[0]] = null
-	if board[board_position[1]][board_position[0]] == null:
-		board[board_position[1]][board_position[0]] = player
-	player.position = target
+	var board_dest = target / 16
+	if board[board_dest[1]][board_dest[0]] == null:
+		board[board_position[1]][board_position[0]] = null
+		board[board_dest[1]][board_dest[0]] = player
+		player.position = target
