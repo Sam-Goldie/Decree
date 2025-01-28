@@ -1,7 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://cc7nwj1biibuw"]
+[gd_scene load_steps=8 format=4 uid="uid://cc7nwj1biibuw"]
 
 [ext_resource type="Texture2D" uid="uid://di6y38yu85dr2" path="res://4_Seasons_Ground_Tiles.png" id="1_ruedu"]
-[ext_resource type="Script" path="res://level.gd" id="2_2idh2"]
+[ext_resource type="Script" path="res://terrain.gd" id="2_2idh2"]
 [ext_resource type="PackedScene" uid="uid://umydvt437mmv" path="res://Player.tscn" id="2_cq4we"]
 [ext_resource type="PackedScene" uid="uid://c4drp01fqj2e7" path="res://Enemy.tscn" id="3_3ige2"]
 [ext_resource type="PackedScene" uid="uid://ba12pskq3mu7k" path="res://Tile.tscn" id="5_mdl2r"]
@@ -96,23 +96,28 @@ texture = ExtResource("1_ruedu")
 [sub_resource type="TileSet" id="TileSet_uuxwi"]
 sources/0 = SubResource("TileSetAtlasSource_ojr4x")
 
-[node name="Level" type="TileMapLayer"]
+[node name="Node2D" type="Node2D"]
+
+[node name="Terrain" type="TileMapLayer" parent="."]
+tile_map_data = PackedByteArray("AAAAAAAAAAADAAAAAAAAAAEAAAADAAAAAAAAAAIAAAADAAAAAAAAAAMAAAADAAAAAAABAAMAAAADAAAAAAADAAMAAAADAAAAAAACAAMAAAADAAAAAAADAAIAAAADAAAAAAACAAIAAAADAAAAAAABAAIAAAADAAAAAAADAAAAAAADAAAAAAADAAEAAAADAAAAAAACAAEAAAADAAAAAAACAAAAAAADAAAAAAABAAAAAAADAAAAAAABAAEAAAADAAAAAAA=")
 tile_set = SubResource("TileSet_uuxwi")
 script = ExtResource("2_2idh2")
 
-[node name="Player" parent="." instance=ExtResource("2_cq4we")]
+[node name="Navigation" type="TileMapLayer" parent="."]
+
+[node name="Player" parent="Navigation" instance=ExtResource("2_cq4we")]
 visible = false
 position = Vector2(16, 32)
 
-[node name="Enemy" parent="." instance=ExtResource("3_3ige2")]
+[node name="Enemy" parent="Navigation" instance=ExtResource("3_3ige2")]
 visible = false
 position = Vector2(32, 16)
 
-[node name="Tile" parent="." instance=ExtResource("5_mdl2r")]
+[node name="Tile" parent="Navigation" instance=ExtResource("5_mdl2r")]
 visible = false
 offset_left = 8.0
 offset_top = 8.0
 offset_right = 16.0
 offset_bottom = 16.0
 
-[connection signal="pressed" from="Tile" to="." method="_on_tile_pressed"]
+[connection signal="pressed" from="Navigation/Tile" to="Terrain" method="_on_tile_pressed"]

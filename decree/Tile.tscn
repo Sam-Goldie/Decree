@@ -1,10 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://ba12pskq3mu7k"]
+[gd_scene load_steps=3 format=3 uid="uid://ba12pskq3mu7k"]
 
 [ext_resource type="Script" path="res://button.gd" id="1_ev0i2"]
 
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_7bac1"]
+
 [node name="Tile" type="Button"]
+self_modulate = Color(1, 1, 1, 0)
 offset_right = 8.0
 offset_bottom = 8.0
+icon = SubResource("CompressedTexture2D_7bac1")
 script = ExtResource("1_ev0i2")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
