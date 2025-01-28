@@ -8,6 +8,8 @@ var tile_scene = preload("res://Tile.tscn")
 var player = player_class.instantiate()
 @onready
 var board = [[enemy_scene.instantiate(), null, null, null], [null, player, null, null], [null, null, enemy_scene.instantiate(), null],[null, null, null, null]]
+@onready
+var enemy1 = board[0][0]
 
 func _ready():
 	var terrain_layer = $Terrain
@@ -41,3 +43,7 @@ func _on_tile_pressed(target):
 		board[board_dest[1]][board_dest[0]] = player
 		player.position = target
 	board[0][0].move(player.position)
+	var attack_target = enemy1.find_targets(board, player)
+	if attack_target != null:
+		attack_target.queue_free()
+		
