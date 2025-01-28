@@ -1,4 +1,4 @@
-extends TileMapLayer
+extends Node2D
 
 var player_class = preload("res://Player.tscn")
 var enemy_scene = preload("res://Enemy.tscn")
@@ -10,16 +10,18 @@ var player = player_class.instantiate()
 var board = [[enemy_scene.instantiate(), null, null, null], [null, player, null, null], [null, null, enemy_scene.instantiate(), null],[null, null, null, null]]
 
 func _ready():
+	var terrain_layer = $Terrain
+	var navigation_layer = $Navigation
 	for i in range(board.size()):
 		for j in range(board[i].size()):
 			var current = board[i][j]
 			var tile = tile_scene.instantiate()
 			tile.position = Vector2(i * 16, j * 16)
 			tile.connect("pressed", _on_tile_pressed.bind(tile.position))
-			add_child(tile)
+			terrain_layer.add_child(tile)
 			if current != null:
 				current.position = Vector2(i * 16, j * 16)
-				add_child(current)
+				navigation_layer.add_child(current)
 				
 				
 
