@@ -40,3 +40,4 @@ func _on_tile_pressed(target):
 		board[board_position[1]][board_position[0]] = null
 		board[board_dest[1]][board_dest[0]] = player
 		player.position = target
+	board[0][0].move(player.position)
