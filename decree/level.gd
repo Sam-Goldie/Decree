@@ -1,15 +1,16 @@
 extends Node2D
 
-var player_class = preload("res://Player.tscn")
+var player_scene = preload("res://Player.tscn")
 var enemy_scene = preload("res://Enemy.tscn")
 var tile_scene = preload("res://Tile.tscn")
 
 @onready
-var player = player_class.instantiate()
+var player = player_scene.instantiate()
 @onready
-var board = [[enemy_scene.instantiate(), null, null, null], [null, player, null, null], [null, null, enemy_scene.instantiate(), null],[null, null, null, null]]
+var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
-var enemy1 = board[0][0]
+var board = [[enemies[0], null, null, null], [null, player, null, null], [null, null, enemies[1], null],[null, null, null, null]]
+
 
 func _ready():
 	var terrain_layer = $Terrain
@@ -23,6 +24,7 @@ func _ready():
 			terrain_layer.add_child(tile)
 			if current != null:
 				current.position = Vector2(i * 16, j * 16)
+				current.board_position = Vector2(i, j)
 				navigation_layer.add_child(current)
 				
 				
@@ -42,8 +44,13 @@ func _on_tile_pressed(target):
 		board[board_position[1]][board_position[0]] = null
 		board[board_dest[1]][board_dest[0]] = player
 		player.position = target
-	board[0][0].move(player.position)
-	var attack_target = enemy1.find_targets(board, player)
-	if attack_target != null:
-		attack_target.queue_free()
-		
+	take_enemy_turn()
+
+func take_enemy_turn():
+	for enemy in enemies:
+		board[enemy.board_position[0]][enemy.board_position[1]] = null 
+		enemy.move(player.position)
+		board[enemy.board_position[0]][enemy.board_position[1]] = enemy
+		var attack_target = enemy.find_targets(board, player)
+		if attack_target != null:
+			attack_target.queue_free()	
