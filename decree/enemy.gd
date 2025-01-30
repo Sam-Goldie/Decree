@@ -3,6 +3,8 @@ extends Node2D
 var board_position : Vector2
 
 func move(player_pos, board):
+	if abs((self.board_position[0] + self.board_position[1]) - (player_pos[0] + player_pos[1])) == 1:
+		return
 	var dest = self.board_position
 	var valid_offsets = [Vector2(1,0), Vector2(0,1), Vector2(-1,0), Vector2(0,-1)]
 	for offset in valid_offsets:
@@ -25,7 +27,7 @@ func find_targets(board, player):
 	for offset in valid_offsets:
 		if offset[0] > board_position[0] or board_position[0] - offset[0] > len(board) - 1 or offset[1] > board_position[1] or board_position[1] - offset[1] > len(board[0]) - 1:
 			continue
-		var target = board[board_position[0] - offset[0]][board_position[1] - offset[1]]
+		var target = board[board_position[1] - offset[1]][board_position[0] - offset[0]]
 		if target == player:
 			return player
 		elif target != null:

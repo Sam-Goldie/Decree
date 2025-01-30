@@ -48,13 +48,13 @@ func _on_tile_pressed(target):
 	take_enemy_turns()
 
 func take_enemy_turns():
-	var enemy_queue = []
 	for i in range(len(enemies)):
 		var enemy = enemies[i]
 		board[enemy.board_position[0]][enemy.board_position[1]] = null 
 		enemy.move(player.board_position, board)
 		board[enemy.board_position[0]][enemy.board_position[1]] = enemy
 		var attack_target = enemy.find_targets(board, player)
+		print(player.board_position)
 		if attack_target != null:
 			attack_target.queue_free()	
 
