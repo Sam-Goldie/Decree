@@ -9,22 +9,21 @@ var player = player_scene.instantiate()
 @onready
 var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
-var board = [[enemies[0], null, null, null], [null, player, null, null], [null, null, enemies[1], null],[null, null, null, null]]
-
+var board = [[enemies[0], enemies[1], null, null], [null, player, null, null], [null, null, null, null],[null, null, null, null]]
 
 func _ready():
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
 	for i in range(board.size()):
 		for j in range(board[i].size()):
-			var current = board[i][j]
+			var current = board[j][i]
 			var tile = tile_scene.instantiate()
-			tile.position = Vector2(i * 16, j * 16)
+			tile.position = Vector2(j * 16, i * 16)
 			tile.connect("pressed", _on_tile_pressed.bind(tile.position))
 			terrain_layer.add_child(tile)
 			if current != null:
-				current.position = Vector2(i * 16, j * 16)
-				current.board_position = Vector2(i, j)
+				current.position = Vector2(j * 16, i * 16)
+				current.board_position = Vector2(j, i)
 				navigation_layer.add_child(current)
 				
 				
@@ -38,19 +37,31 @@ func _ready():
 
 
 func _on_tile_pressed(target):
+	clear_dead()
 	var board_position = player.position / 16
 	var board_dest = target / 16
 	if board[board_dest[1]][board_dest[0]] == null:
 		board[board_position[1]][board_position[0]] = null
 		board[board_dest[1]][board_dest[0]] = player
 		player.position = target
-	take_enemy_turn()
+		player.board_position = target / 16
+	take_enemy_turns()
 
-func take_enemy_turn():
-	for enemy in enemies:
+func take_enemy_turns():
+	var enemy_queue = []
+	for i in range(len(enemies)):
+		var enemy = enemies[i]
 		board[enemy.board_position[0]][enemy.board_position[1]] = null 
-		enemy.move(player.position)
+		enemy.move(player.board_position, board)
 		board[enemy.board_position[0]][enemy.board_position[1]] = enemy
 		var attack_target = enemy.find_targets(board, player)
 		if attack_target != null:
 			attack_target.queue_free()	
+
+func clear_dead():
+	var dead_idx = []
+	for i in range(len(enemies)):
+		if enemies[i] == null:
+			dead_idx.append(i)
+	for i in range(len(dead_idx)):
+		enemies.remove_at(dead_idx[-i-1])

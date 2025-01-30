@@ -2,21 +2,22 @@ extends Node2D
 
 var board_position : Vector2
 
-func move(player_pos):
-	var distance = self.position - player_pos
-	if abs(distance[0]) + abs(distance[1]) == 16:
-		return
-	elif distance[1] == 0 or abs(distance[0]) < abs(distance[1]):
-		if distance[0] < 0:
-			self.position += Vector2(16,0)
-		else:
-			self.position -= Vector2(16,0)
-	else:
-		if distance[1] < 0:
-			self.position += Vector2(0,16)
-		else:
-			self.position -= Vector2(0,16)
-	self.board_position = self.position / 16
+func move(player_pos, board):
+	var dest = self.board_position
+	var valid_offsets = [Vector2(1,0), Vector2(0,1), Vector2(-1,0), Vector2(0,-1)]
+	for offset in valid_offsets:
+		var target = self.board_position + offset
+		if target[0] < 0 or target[0] > len(board) - 1 or target[1] < 0 or target[1] > len(board) - 1 or board[target[0]][target[1]] != null:
+			continue
+		var current_dist = Vector2(abs(player_pos[0] - dest[0]), abs(player_pos[1] - dest[1]))
+		var current_total = current_dist[0] + current_dist[1]
+		var target_dist = Vector2(abs(player_pos[0] - target[0]), abs(player_pos[1] - target[1]))
+		var target_total = target_dist[0] + target_dist[1]
+		print(current_total == target_total)
+		if current_total > target_total or (current_total == target_total and abs(current_dist[0] - current_dist[1]) > abs(target_dist[0] - target_dist[1])):
+			dest = target
+	self.board_position = dest
+	self.position = dest * 16
 
 func find_targets(board, player):
 	var result = null
