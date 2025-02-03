@@ -1,6 +1,7 @@
 extends Node2D
 
 var board_position : Vector2
+var hp : int
 
 func move(player_pos, board):
 	if abs(self.board_position[0] - player_pos[0]) + abs(self.board_position[1] - player_pos[1]) == 1:

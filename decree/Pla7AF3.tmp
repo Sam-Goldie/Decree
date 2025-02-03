@@ -13,9 +13,7 @@ texture = ExtResource("1_e7pmw")
 offset = Vector2(64, 64)
 
 [node name="TextEdit" type="TextEdit" parent="."]
-offset_left = 6.0
-offset_top = 2.0
-offset_right = 28.0
-offset_bottom = 34.0
-theme_override_font_sizes/font_size = 20
-text = "3"
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 20.0
+offset_bottom = 20.0
