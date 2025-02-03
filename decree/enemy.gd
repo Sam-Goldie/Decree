@@ -3,7 +3,7 @@ extends Node2D
 var board_position : Vector2
 
 func move(player_pos, board):
-	if abs((self.board_position[0] + self.board_position[1]) - (player_pos[0] + player_pos[1])) == 1:
+	if abs(self.board_position[0] - player_pos[0]) + abs(self.board_position[1] - player_pos[1]) == 1:
 		return
 	var dest = self.board_position
 	var valid_offsets = [Vector2(1,0), Vector2(0,1), Vector2(-1,0), Vector2(0,-1)]
