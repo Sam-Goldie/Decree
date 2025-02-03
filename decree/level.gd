@@ -62,6 +62,10 @@ func take_enemy_turns():
 			attack_target.hp -= 1
 			if attack_target.hp <= 0:
 				attack_target.queue_free()
+			else:
+				var nodes = attack_target.get_children()
+				var health = nodes[1]
+				health.text = str(attack_target.hp)
 
 func clear_dead():
 	var dead_idx = []
