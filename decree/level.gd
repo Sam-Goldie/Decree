@@ -14,6 +14,9 @@ var board = [[enemies[0], enemies[1], null, null], [null, player, null, null], [
 func _ready():
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
+	player.hp = 3
+	for enemy in enemies:
+		enemy.hp = 3
 	for i in range(board.size()):
 		for j in range(board[i].size()):
 			var current = board[j][i]
@@ -56,7 +59,13 @@ func take_enemy_turns():
 		var attack_target = enemy.find_targets(board, player)
 		print(player.board_position)
 		if attack_target != null:
-			attack_target.queue_free()	
+			attack_target.hp -= 1
+			if attack_target.hp <= 0:
+				attack_target.queue_free()
+			else:
+				var nodes = attack_target.get_children()
+				var health = nodes[1]
+				health.text = str(attack_target.hp)
 
 func clear_dead():
 	var dead_idx = []

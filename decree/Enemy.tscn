@@ -9,3 +9,10 @@ script = ExtResource("1_a12p4")
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_xvn8d")
 offset = Vector2(8, 8)
+
+[node name="TextEdit" type="TextEdit" parent="."]
+offset_left = -1.0
+offset_top = -10.0
+offset_right = 18.0
+offset_bottom = 18.0
+text = "3"
