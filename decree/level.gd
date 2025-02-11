@@ -14,8 +14,6 @@ var active_entity = player
 var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
 var board = [[enemies[0], null, null, null], [null, player, null, null], [null, null, null, null],[null, null, null, enemies[1]]]
-@onready
-var mouse_is_pressed = false 
 
 func _ready():
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
@@ -119,14 +117,9 @@ func attack(entity, target):
 		take_enemy_turns()
 	
 func _input(event):
-	print(get_global_mouse_position())
 	if active_entity != player:
 		return
-	
-	if event is InputEventMouseButton:
-		if mouse_is_pressed:
-			mouse_is_pressed = false
-			return
+	if event is InputEventMouseButton and event.pressed:
 		var mouse_position = get_global_mouse_position()
 		if mouse_position[0] > 64 or mouse_position[0] < 0 or mouse_position[1] > 64 or mouse_position[1] < 0:
 			return
