@@ -13,11 +13,12 @@ var active_entity = player
 @onready
 var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
-var board = [[null, null, null, null], [null, player, null, null], [null, null, null, null],[null, null, null, null]]
+var board = [[enemies[0], null, null, null], [null, player, null, null], [null, null, null, null],[null, null, null, enemies[1]]]
+@onready
+var mouse_is_pressed = false 
 
 func _ready():
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	player.board = board
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
 	player.hp = 3
@@ -66,12 +67,13 @@ func is_in_range(position1, position2, range):
 		#board[board_dest[1]][board_dest[0]] = player
 		#player.position = target
 		#player.board_position = target / 16
-	##player.select_target()
+	#player.select_target()
 	#take_enemy_turns()
 
 func take_enemy_turns():
 	for i in range(len(enemies)):
 		var enemy = enemies[i]
+		active_entity = enemy
 		board[enemy.board_position[0]][enemy.board_position[1]] = null 
 		enemy.move(player.board_position)
 		board[enemy.board_position[0]][enemy.board_position[1]] = enemy
@@ -85,6 +87,7 @@ func take_enemy_turns():
 				var nodes = attack_target.get_children()
 				var health = nodes[1]
 				health.text = str(attack_target.hp)
+	active_entity = player
 
 func clear_dead():
 	var dead_idx = []
@@ -106,19 +109,24 @@ func move(entity, target):
 		entity.position = target * 16
 		board[current_board_position[0]][current_board_position[1]] = null
 		board[target[0]][target[1]] = entity
-		confirm_move.emit()
+		entity.has_moved = true
 
 func attack(entity, target):
 	var attacker_board_position = get_board_position(entity.position)
 	if board[target[0]][target[1]] != null and board[target[0]][target[1]] != entity:
 		damage(board[target[0]][target[1]], entity.damage)
-		confirm_attack.emit()
+		entity.has_moved = false
+		take_enemy_turns()
 	
 func _input(event):
 	print(get_global_mouse_position())
 	if active_entity != player:
 		return
+	
 	if event is InputEventMouseButton:
+		if mouse_is_pressed:
+			mouse_is_pressed = false
+			return
 		var mouse_position = get_global_mouse_position()
 		if mouse_position[0] > 64 or mouse_position[0] < 0 or mouse_position[1] > 64 or mouse_position[1] < 0:
 			return
@@ -127,3 +135,4 @@ func _input(event):
 			move(active_entity, board_position)
 		else:
 			attack(active_entity, board_position)
+		

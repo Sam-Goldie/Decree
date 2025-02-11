@@ -3,7 +3,6 @@ extends Node2D
 var board_position : Vector2
 var hp : int
 var damage : int
-var board
 var has_moved : bool
 
 signal move(entity, target)
