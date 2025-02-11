@@ -114,7 +114,8 @@ func attack(entity, target):
 		damage(board[target[0]][target[1]], entity.damage)
 		confirm_attack.emit()
 	
-func _unhandled_input(event):
+func _input(event):
+	print(get_global_mouse_position())
 	if active_entity != player:
 		return
 	if event is InputEventMouseButton:
