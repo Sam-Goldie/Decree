@@ -107,6 +107,7 @@ func move(entity, target):
 		entity.position = target * 16
 		board[current_board_position[0]][current_board_position[1]] = null
 		board[target[0]][target[1]] = entity
+		entity.board_position = target
 		entity.has_moved = true
 
 func attack(entity, target):
