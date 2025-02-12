@@ -16,7 +16,7 @@ var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate()]
 var board = [[enemies[0], null, null, null], [null, player, null, null], [null, null, null, null],[null, null, null, enemies[1]]]
 
 func _ready():
-	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	#DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
 	player.hp = 3
@@ -119,8 +119,9 @@ func attack(entity, target):
 func _input(event):
 	if active_entity != player:
 		return
-	if event is InputEventMouseButton and event.pressed:
-		var mouse_position = get_global_mouse_position()
+	if event is InputEventMouseButton and event.is_pressed() and not event.is_echo():
+		var mouse_position = get_local_mouse_position()
+		print(mouse_position)
 		if mouse_position[0] > 64 or mouse_position[0] < 0 or mouse_position[1] > 64 or mouse_position[1] < 0:
 			return
 		var board_position = get_board_position(mouse_position)

@@ -21,7 +21,5 @@ Level="*res://Level.tscn"
 
 [display]
 
-window/size/viewport_width=1028
-window/size/viewport_height=1028
-window/size/resizable=false
+window/stretch/mode="canvas_items"
 window/stretch/scale=8.0
