@@ -2,15 +2,17 @@ extends Node2D
 
 var board_position : Vector2
 var hp : int
+var damage : int
+var board
 
 func _ready():
 	var hp_display = str(hp)
-	$TextEdit.text = hp_display
+	$Label.text = hp_display
 
-func move(player_pos, board):
-	if abs(self.board_position[0] - player_pos[0]) + abs(self.board_position[1] - player_pos[1]) == 1:
-		return
+func plan_move(player_pos):
 	var dest = self.board_position
+	if abs(self.board_position[0] - player_pos[0]) + abs(self.board_position[1] - player_pos[1]) == 1:
+		return dest
 	var valid_offsets = [Vector2(1,0), Vector2(0,1), Vector2(-1,0), Vector2(0,-1)]
 	for offset in valid_offsets:
 		var target = self.board_position + offset
@@ -23,10 +25,9 @@ func move(player_pos, board):
 		print(current_total == target_total)
 		if current_total > target_total or (current_total == target_total and abs(current_dist[0] - current_dist[1]) > abs(target_dist[0] - target_dist[1])):
 			dest = target
-	self.board_position = dest
-	self.position = dest * 16
+	return dest
 
-func find_targets(board, player):
+func find_targets(player):
 	var result = null
 	var valid_offsets = [Vector2(1,0), Vector2(0,1), Vector2(-1,0), Vector2(0,-1)]
 	for offset in valid_offsets:

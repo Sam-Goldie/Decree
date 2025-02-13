@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://umydvt437mmv"]
+
+[ext_resource type="Texture2D" uid="uid://dp0r0glacyjhi" path="res://smanic.png" id="1_e7pmw"]
+[ext_resource type="Script" path="res://player.gd" id="1_pcjrc"]
+
+[node name="Player" type="Node2D"]
+scale = Vector2(0.5, 0.5)
+script = ExtResource("1_pcjrc")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_e7pmw")
+offset = Vector2(64, 64)
+
+[node name="TextEdit" type="TextEdit" parent="."]
+offset_left = 6.0
+offset_top = 2.0
+offset_right = 28.0
+offset_bottom = 34.0
+theme_override_font_sizes/font_size = 20
+text = "3"

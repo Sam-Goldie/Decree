@@ -21,4 +21,5 @@ Level="*res://Level.tscn"
 
 [display]
 
+window/stretch/mode="canvas_items"
 window/stretch/scale=8.0
