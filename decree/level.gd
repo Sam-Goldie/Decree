@@ -20,6 +20,8 @@ func _ready():
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
 	player.hp = 3
+	player.damage = 1
+	player.range = 1
 	for enemy in enemies:
 		enemy.hp = 3
 		enemy.damage = 1
@@ -28,7 +30,8 @@ func _ready():
 		for j in range(board[i].size()):
 			var current = board[j][i]
 			var tile = tile_scene.instantiate()
-			tile.position = Vector2(j * 16, i * 16)
+			tile.position = Vector2(i * 16, j * 16)
+			tile.board_position = Vector2(i, j)
 			terrain_layer.add_child(tile)
 			if current != null:
 				current.position = Vector2(i * 16, j * 16)
@@ -70,6 +73,8 @@ func is_in_range(position1, position2, range):
 
 func take_enemy_turns():
 	for i in range(len(enemies)):
+		if i >= len(enemies):
+			break
 		var enemy = enemies[i]
 		active_entity = enemy
 		board[enemy.board_position[0]][enemy.board_position[1]] = null 
@@ -79,12 +84,6 @@ func take_enemy_turns():
 		print(player.board_position)
 		if attack_target != null:
 			damage(attack_target, enemy.damage)
-			if attack_target.hp <= 0:
-				attack_target.queue_free()
-			else:
-				var nodes = attack_target.get_children()
-				var health = nodes[1]
-				health.text = str(attack_target.hp)
 	active_entity = player
 
 func clear_dead():
@@ -98,7 +97,12 @@ func clear_dead():
 func damage(target, amount):
 	target.hp -= amount
 	if target.hp <= 0:
-		target.queue_free()
+		target.free()
+		clear_dead()
+	else:
+		var nodes = target.get_children()
+		var health = nodes[1]
+		health.text = str(target.hp)
 
 
 func move(entity, target):
@@ -111,23 +115,30 @@ func move(entity, target):
 		entity.has_moved = true
 
 func attack(entity, target):
+	if !is_in_range(entity.board_position, target, entity.range):
+		return
 	var attacker_board_position = get_board_position(entity.position)
 	if board[target[0]][target[1]] != null and board[target[0]][target[1]] != entity:
 		damage(board[target[0]][target[1]], entity.damage)
-		entity.has_moved = false
-		take_enemy_turns()
+	entity.has_moved = false
+	take_enemy_turns()
 	
 func _input(event):
 	if active_entity != player:
 		return
 	if event is InputEventMouseButton and event.is_pressed() and not event.is_echo():
-		var mouse_position = get_local_mouse_position()
-		print(mouse_position)
-		if mouse_position[0] > 64 or mouse_position[0] < 0 or mouse_position[1] > 64 or mouse_position[1] < 0:
-			return
+		var mouse_position = active_entity.get_global_mouse_position()
 		var board_position = get_board_position(mouse_position)
 		if !active_entity.has_moved:
 			move(active_entity, board_position)
 		else:
 			attack(active_entity, board_position)
-		
+
+#func _on_tile_click(board_position):
+	#if active_entity != player:
+		#return
+	#move(player, board_position.board_position)
+#
+#
+#func _on_tile_pressed():
+	#pass # Replace with function body.

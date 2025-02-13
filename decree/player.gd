@@ -4,6 +4,7 @@ var board_position : Vector2
 var hp : int
 var damage : int
 var has_moved : bool
+var range : int
 
 signal move(entity, target)
 signal attack(entity, target)

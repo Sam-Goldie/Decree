@@ -1,11 +1,10 @@
-[gd_scene format=3 uid="uid://ba12pskq3mu7k"]
+[gd_scene load_steps=2 format=3 uid="uid://ba12pskq3mu7k"]
 
-[node name="Tile" type="Control"]
+[ext_resource type="Script" path="res://tile.gd" id="1_vd0qm"]
+
+[node name="Tile" type="Node2D"]
 self_modulate = Color(1, 1, 1, 0)
-layout_mode = 3
-anchors_preset = 0
-offset_right = 8.0
-offset_bottom = 8.0
+script = ExtResource("1_vd0qm")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(2, 2)

@@ -115,9 +115,12 @@ position = Vector2(32, 16)
 
 [node name="Tile" parent="Navigation" instance=ExtResource("5_mdl2r")]
 visible = false
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 16.0
+offset_bottom = 16.0
 
 [connection signal="confirm_attack" from="." to="Navigation/Player" method="_on_level_confirm_attack"]
 [connection signal="confirm_move" from="." to="Navigation/Player" method="_on_level_confirm_move"]
 [connection signal="attack" from="Navigation/Player" to="." method="_on_attack"]
 [connection signal="move" from="Navigation/Player" to="." method="_on_move"]
-[connection signal="pressed" from="Navigation/Tile" to="." method="_on_tile_pressed"]
