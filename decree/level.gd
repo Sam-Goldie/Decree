@@ -37,15 +37,6 @@ func _ready():
 				current.position = Vector2(i * 16, j * 16)
 				current.board_position = Vector2(i, j)
 				navigation_layer.add_child(current)
-				
-				
-
-
-#func move_player(position):
-	#board[player.position[0]][player.position[1]] = null
-	#if board[position[0]][position[1]] == null:
-		#board[position[0]][position[1]] = player
-	#player.position = position
 
 func get_board_position(position : Vector2):
 	var int_position = Vector2i(floori(position[0]), floori(position[1]))
@@ -57,19 +48,6 @@ func is_in_range(position1, position2, range):
 		return true
 	else:
 		return false 
-	
-
-#func _on_tile_pressed(target):
-	#clear_dead()
-	#var board_position = player.global_position / 16
-	#var board_dest = target / 16
-	#if board[board_dest[1]][board_dest[0]] == null:
-		#board[board_position[1]][board_position[0]] = null
-		#board[board_dest[1]][board_dest[0]] = player
-		#player.position = target
-		#player.board_position = target / 16
-	#player.select_target()
-	#take_enemy_turns()
 
 func take_enemy_turns():
 	for i in range(len(enemies)):
@@ -77,11 +55,13 @@ func take_enemy_turns():
 			break
 		var enemy = enemies[i]
 		active_entity = enemy
-		board[enemy.board_position[0]][enemy.board_position[1]] = null 
-		enemy.move(player.board_position)
-		board[enemy.board_position[0]][enemy.board_position[1]] = enemy
+		var dest = enemy.plan_move(player.board_position)
+		if dest != enemy.board_position:	
+			board[enemy.board_position[0]][enemy.board_position[1]] = null 
+			board[dest[0]][dest[1]] = enemy
+			enemy.position = dest * 16
+			enemy.board_position = dest
 		var attack_target = enemy.find_targets(player)
-		print(player.board_position)
 		if attack_target != null:
 			damage(attack_target, enemy.damage)
 	active_entity = player
@@ -133,12 +113,3 @@ func _input(event):
 			move(active_entity, board_position)
 		else:
 			attack(active_entity, board_position)
-
-#func _on_tile_click(board_position):
-	#if active_entity != player:
-		#return
-	#move(player, board_position.board_position)
-#
-#
-#func _on_tile_pressed():
-	#pass # Replace with function body.
