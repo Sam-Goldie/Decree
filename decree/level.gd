@@ -13,7 +13,7 @@ var active_entity = player
 @onready
 var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
-var board = [[enemies[0], null, null, null], [null, player, null, null], [null, null, null, null],[null, null, null, enemies[1]]]
+var board = [[enemies[0], null, null, null], [null, player, null, null], [null, null, null, null],[null, null, null, null]]
 @onready
 var grid = AStarGrid2D.new()
 
@@ -56,6 +56,8 @@ func is_in_range(position1, position2, range):
 		return false 
 
 func take_enemy_turns():
+	for enemy in enemies:
+		enemy.has_moved = false
 	for i in range(len(enemies)):
 		if i >= len(enemies):
 			break
@@ -65,10 +67,7 @@ func take_enemy_turns():
 		var path = grid.get_id_path(active_entity.board_position, player.board_position, true)
 		if len(path) > 2:
 			var dest = path[1]
-			board[active_entity.board_position[0]][active_entity.board_position[1]] = null 
-			board[dest[0]][dest[1]] = active_entity
-			active_entity.position = dest * 16
-			active_entity.board_position = dest
+			move(active_entity, dest)
 		var attack_target = active_entity.find_targets(player)
 		if attack_target != null:
 			damage(attack_target, active_entity.damage)
