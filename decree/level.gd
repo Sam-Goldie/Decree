@@ -14,6 +14,8 @@ var active_entity = player
 var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
 var board = [[enemies[0], null, null, null], [null, player, null, null], [null, null, null, null],[null, null, null, enemies[1]]]
+@onready
+var grid = AStarGrid2D.new()
 
 func _ready():
 	#DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
@@ -30,13 +32,17 @@ func _ready():
 		for j in range(board[i].size()):
 			var current = board[j][i]
 			var tile = tile_scene.instantiate()
-			tile.position = Vector2(i * 16, j * 16)
-			tile.board_position = Vector2(i, j)
+			tile.position = Vector2i(i * 16, j * 16)
+			tile.board_position = Vector2i(i, j)
 			terrain_layer.add_child(tile)
 			if current != null:
-				current.position = Vector2(i * 16, j * 16)
-				current.board_position = Vector2(i, j)
+				current.position = Vector2i(i * 16, j * 16)
+				current.board_position = Vector2i(i, j)
 				navigation_layer.add_child(current)
+	grid.size = Vector2i(4,4)
+	grid.cell_size = Vector2(16,16)
+	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
+	grid.update()
 
 func get_board_position(position : Vector2):
 	var int_position = Vector2i(floori(position[0]), floori(position[1]))
@@ -53,18 +59,23 @@ func take_enemy_turns():
 	for i in range(len(enemies)):
 		if i >= len(enemies):
 			break
-		var enemy = enemies[i]
-		active_entity = enemy
-		var dest = enemy.plan_move(player.board_position)
-		if dest != enemy.board_position:	
-			board[enemy.board_position[0]][enemy.board_position[1]] = null 
-			board[dest[0]][dest[1]] = enemy
-			enemy.position = dest * 16
-			enemy.board_position = dest
-		var attack_target = enemy.find_targets(player)
+		active_entity = enemies[i]
+		for enemy in enemies:
+			grid.set_point_solid(enemy.board_position)
+		var path = grid.get_id_path(active_entity.board_position, player.board_position, true)
+		if len(path) > 2:
+			var dest = path[1]
+			board[active_entity.board_position[0]][active_entity.board_position[1]] = null 
+			board[dest[0]][dest[1]] = active_entity
+			active_entity.position = dest * 16
+			active_entity.board_position = dest
+		var attack_target = active_entity.find_targets(player)
 		if attack_target != null:
-			damage(attack_target, enemy.damage)
+			damage(attack_target, active_entity.damage)
+		for enemy in enemies:
+			grid.set_point_solid(enemy.board_position, false)
 	active_entity = player
+
 
 func clear_dead():
 	var dead_idx = []
