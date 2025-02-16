@@ -13,7 +13,7 @@ var active_entity = player
 @onready
 var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
-var board = [[enemies[0], null, null, null], [null, player, null, null], [null, null, null, null],[null, null, null, null]]
+var board = [[enemies[0], null, null, null], [enemies[1], player, null, null], [null, null, null, null],[null, null, null, null]]
 @onready
 var grid = AStarGrid2D.new()
 
@@ -46,8 +46,8 @@ func _ready():
 
 func get_board_position(position : Vector2):
 	var int_position = Vector2i(floori(position[0]), floori(position[1]))
-	var snapped_position = int_position - (int_position % Vector2i(16,16))
-	return snapped_position / 16
+	var snapped_position = (int_position - (int_position % Vector2i(16,16))) / 16
+	return snapped_position
 	
 func is_in_range(position1, position2, range):
 	if abs(position1[0] - position2[0]) + abs(position1[1] - position2[1]) <= range:
@@ -63,7 +63,8 @@ func take_enemy_turns():
 			break
 		active_entity = enemies[i]
 		for enemy in enemies:
-			grid.set_point_solid(enemy.board_position)
+			if active_entity != enemy:
+				grid.set_point_solid(enemy.board_position)
 		var path = grid.get_id_path(active_entity.board_position, player.board_position, true)
 		if len(path) > 2:
 			var dest = path[1]
@@ -96,11 +97,13 @@ func damage(target, amount):
 
 
 func move(entity, target):
+	if grid.is_dirty():
+		grid.update()
 	var current_board_position = get_board_position(entity.position)
-	if board[target[0]][target[1]] == null:
+	if board[target[1]][target[0]] == null:
 		entity.position = target * 16
-		board[current_board_position[0]][current_board_position[1]] = null
-		board[target[0]][target[1]] = entity
+		board[current_board_position[1]][current_board_position[0]] = null
+		board[target[1]][target[0]] = entity
 		entity.board_position = target
 		entity.has_moved = true
 
