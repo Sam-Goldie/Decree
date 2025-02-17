@@ -11,9 +11,9 @@ var player = player_scene.instantiate()
 @onready
 var active_entity = player
 @onready
-var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate()]
+var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
-var board = [[enemies[0], null, null, null], [enemies[1], player, null, null], [null, null, null, null],[null, null, null, null]]
+var board = [[enemies[0], null, null, null], [enemies[1], player, null, null], [null, null, null, enemies[2]],[null, null, enemies[3], null]]
 @onready
 var grid = AStarGrid2D.new()
 
@@ -56,12 +56,15 @@ func is_in_range(position1, position2, range):
 		return false 
 
 func take_enemy_turns():
+	clear_dead()
 	for enemy in enemies:
 		enemy.has_moved = false
 	for i in range(len(enemies)):
 		if i >= len(enemies):
 			break
 		active_entity = enemies[i]
+		if active_entity == null:
+			continue
 		for enemy in enemies:
 			if active_entity != enemy:
 				grid.set_point_solid(enemy.board_position)
@@ -72,6 +75,7 @@ func take_enemy_turns():
 		var attack_target = active_entity.find_targets(player)
 		if attack_target != null:
 			damage(attack_target, active_entity.damage)
+		clear_dead()
 		for enemy in enemies:
 			grid.set_point_solid(enemy.board_position, false)
 	active_entity = player
@@ -89,7 +93,6 @@ func damage(target, amount):
 	target.hp -= amount
 	if target.hp <= 0:
 		target.free()
-		clear_dead()
 	else:
 		var nodes = target.get_children()
 		var health = nodes[1]
@@ -100,6 +103,8 @@ func move(entity, target):
 	if grid.is_dirty():
 		grid.update()
 	var current_board_position = get_board_position(entity.position)
+	if target[0] < 0 or target[0] > 3 or target[1] < 0 or target[1] > 3:
+		return
 	if board[target[1]][target[0]] == null:
 		entity.position = target * 16
 		board[current_board_position[1]][current_board_position[0]] = null
@@ -111,8 +116,8 @@ func attack(entity, target):
 	if !is_in_range(entity.board_position, target, entity.range):
 		return
 	var attacker_board_position = get_board_position(entity.position)
-	if board[target[0]][target[1]] != null and board[target[0]][target[1]] != entity:
-		damage(board[target[0]][target[1]], entity.damage)
+	if board[target[1]][target[0]] != null and board[target[1]][target[0]] != entity:
+		damage(board[target[1]][target[0]], entity.damage)
 	entity.has_moved = false
 	take_enemy_turns()
 	
