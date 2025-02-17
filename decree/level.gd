@@ -11,9 +11,11 @@ var player = player_scene.instantiate()
 @onready
 var active_entity = player
 @onready
-var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate()]
+var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
-var board = [[enemies[0], null, null, null], [null, player, null, null], [null, null, null, null],[null, null, null, enemies[1]]]
+var board = [[enemies[0], null, null, null], [enemies[1], player, null, null], [null, null, null, enemies[2]],[null, null, enemies[3], null]]
+@onready
+var grid = AStarGrid2D.new()
 
 func _ready():
 	#DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
@@ -30,18 +32,22 @@ func _ready():
 		for j in range(board[i].size()):
 			var current = board[j][i]
 			var tile = tile_scene.instantiate()
-			tile.position = Vector2(i * 16, j * 16)
-			tile.board_position = Vector2(i, j)
+			tile.position = Vector2i(i * 16, j * 16)
+			tile.board_position = Vector2i(i, j)
 			terrain_layer.add_child(tile)
 			if current != null:
-				current.position = Vector2(i * 16, j * 16)
-				current.board_position = Vector2(i, j)
+				current.position = Vector2i(i * 16, j * 16)
+				current.board_position = Vector2i(i, j)
 				navigation_layer.add_child(current)
+	grid.size = Vector2i(4,4)
+	grid.cell_size = Vector2(16,16)
+	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
+	grid.update()
 
 func get_board_position(position : Vector2):
 	var int_position = Vector2i(floori(position[0]), floori(position[1]))
-	var snapped_position = int_position - (int_position % Vector2i(16,16))
-	return snapped_position / 16
+	var snapped_position = (int_position - (int_position % Vector2i(16,16))) / 16
+	return snapped_position
 	
 func is_in_range(position1, position2, range):
 	if abs(position1[0] - position2[0]) + abs(position1[1] - position2[1]) <= range:
@@ -50,21 +56,30 @@ func is_in_range(position1, position2, range):
 		return false 
 
 func take_enemy_turns():
+	clear_dead()
+	for enemy in enemies:
+		enemy.has_moved = false
 	for i in range(len(enemies)):
 		if i >= len(enemies):
 			break
-		var enemy = enemies[i]
-		active_entity = enemy
-		var dest = enemy.plan_move(player.board_position)
-		if dest != enemy.board_position:	
-			board[enemy.board_position[0]][enemy.board_position[1]] = null 
-			board[dest[0]][dest[1]] = enemy
-			enemy.position = dest * 16
-			enemy.board_position = dest
-		var attack_target = enemy.find_targets(player)
+		active_entity = enemies[i]
+		if active_entity == null:
+			continue
+		for enemy in enemies:
+			if active_entity != enemy:
+				grid.set_point_solid(enemy.board_position)
+		var path = grid.get_id_path(active_entity.board_position, player.board_position, true)
+		if len(path) > 2:
+			var dest = path[1]
+			move(active_entity, dest)
+		var attack_target = active_entity.find_targets(player)
 		if attack_target != null:
-			damage(attack_target, enemy.damage)
+			damage(attack_target, active_entity.damage)
+		clear_dead()
+		for enemy in enemies:
+			grid.set_point_solid(enemy.board_position, false)
 	active_entity = player
+
 
 func clear_dead():
 	var dead_idx = []
@@ -78,7 +93,6 @@ func damage(target, amount):
 	target.hp -= amount
 	if target.hp <= 0:
 		target.free()
-		clear_dead()
 	else:
 		var nodes = target.get_children()
 		var health = nodes[1]
@@ -86,11 +100,15 @@ func damage(target, amount):
 
 
 func move(entity, target):
+	if grid.is_dirty():
+		grid.update()
 	var current_board_position = get_board_position(entity.position)
-	if board[target[0]][target[1]] == null:
+	if target[0] < 0 or target[0] > 3 or target[1] < 0 or target[1] > 3:
+		return
+	if board[target[1]][target[0]] == null:
 		entity.position = target * 16
-		board[current_board_position[0]][current_board_position[1]] = null
-		board[target[0]][target[1]] = entity
+		board[current_board_position[1]][current_board_position[0]] = null
+		board[target[1]][target[0]] = entity
 		entity.board_position = target
 		entity.has_moved = true
 
@@ -98,8 +116,8 @@ func attack(entity, target):
 	if !is_in_range(entity.board_position, target, entity.range):
 		return
 	var attacker_board_position = get_board_position(entity.position)
-	if board[target[0]][target[1]] != null and board[target[0]][target[1]] != entity:
-		damage(board[target[0]][target[1]], entity.damage)
+	if board[target[1]][target[0]] != null and board[target[1]][target[0]] != entity:
+		damage(board[target[1]][target[0]], entity.damage)
 	entity.has_moved = false
 	take_enemy_turns()
 	
