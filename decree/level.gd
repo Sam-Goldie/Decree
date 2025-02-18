@@ -13,7 +13,7 @@ var active_entity = player
 @onready
 var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
-var board = [[enemies[0], null, null, null], [enemies[1], player, null, null], [null, null, null, enemies[2]],[null, null, enemies[3], null]]
+var board = [[null, null, null, enemies[0]], [enemies[1], player, null, null], [null, null, null, enemies[2]],[null, null, enemies[3], null]]
 @onready
 var grid = AStarGrid2D.new()
 
@@ -34,6 +34,8 @@ func _ready():
 			var tile = tile_scene.instantiate()
 			tile.position = Vector2i(i * 16, j * 16)
 			tile.board_position = Vector2i(i, j)
+			tile.get_child(1).self_modulate.a = 0
+			tile.connect("click", _on_tile_click.bind(tile.board_position))
 			terrain_layer.add_child(tile)
 			if current != null:
 				current.position = Vector2i(i * 16, j * 16)
@@ -120,14 +122,11 @@ func attack(entity, target):
 		damage(board[target[1]][target[0]], entity.damage)
 	entity.has_moved = false
 	take_enemy_turns()
-	
-func _input(event):
+
+func _on_tile_click(board_position):
 	if active_entity != player:
 		return
-	if event is InputEventMouseButton and event.is_pressed() and not event.is_echo():
-		var mouse_position = active_entity.get_global_mouse_position()
-		var board_position = get_board_position(mouse_position)
-		if !active_entity.has_moved:
-			move(active_entity, board_position)
-		else:
-			attack(active_entity, board_position)
+	if !active_entity.has_moved:
+		move(active_entity, board_position)
+	else:
+		attack(active_entity, board_position)
