@@ -13,6 +13,13 @@ var active_entity = player
 @onready
 var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
+var terrain = [
+	[tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate()], 
+	[tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate()], 
+	[tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate()], 
+	[tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate()], 
+]
+@onready
 var board = [[null, null, null, enemies[0]], [enemies[1], player, null, null], [null, null, null, enemies[2]],[null, null, enemies[3], null]]
 @onready
 var grid = AStarGrid2D.new()
@@ -31,11 +38,11 @@ func _ready():
 	for i in range(board.size()):
 		for j in range(board[i].size()):
 			var current = board[j][i]
-			var tile = tile_scene.instantiate()
+			var tile = terrain[j][i]
 			tile.position = Vector2i(i * 16, j * 16)
 			tile.board_position = Vector2i(i, j)
 			tile.get_child(1).self_modulate.a = 0
-			tile.connect("click", _on_tile_click.bind(tile.board_position))
+			tile.connect("click", _on_tile_click.bind(tile))
 			terrain_layer.add_child(tile)
 			if current != null:
 				current.position = Vector2i(i * 16, j * 16)
@@ -123,10 +130,10 @@ func attack(entity, target):
 	entity.has_moved = false
 	take_enemy_turns()
 
-func _on_tile_click(board_position):
+func _on_tile_click(tile):
 	if active_entity != player:
 		return
 	if !active_entity.has_moved:
-		move(active_entity, board_position)
+		move(active_entity, tile.board_position)
 	else:
-		attack(active_entity, board_position)
+		attack(active_entity, tile.board_position)
