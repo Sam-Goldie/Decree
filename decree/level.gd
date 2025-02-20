@@ -42,6 +42,7 @@ func _ready():
 			tile.position = Vector2i(i * 16, j * 16)
 			tile.board_position = Vector2i(i, j)
 			tile.get_child(1).self_modulate.a = 0
+			tile.get_node("BlinkSquare").self_modulate.a = 0
 			tile.connect("click", _on_tile_click.bind(tile))
 			terrain_layer.add_child(tile)
 			if current != null:
@@ -52,6 +53,12 @@ func _ready():
 	grid.cell_size = Vector2(16,16)
 	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	grid.update()
+	
+func is_valid_position(board_position):
+	if board_position[0] < 0 or board_position[0] > len(board) - 1 or board_position[1] < 0 or board_position[1] > len(board) - 1:
+		return false
+	else:
+		return true
 
 func get_board_position(position : Vector2):
 	var int_position = Vector2i(floori(position[0]), floori(position[1]))
@@ -66,6 +73,7 @@ func is_in_range(position1, position2, range):
 
 func take_enemy_turns():
 	clear_dead()
+	remove_target_highlights(player.board_position)
 	for enemy in enemies:
 		enemy.has_moved = false
 	for i in range(len(enemies)):
@@ -112,6 +120,8 @@ func move(entity, target):
 	if grid.is_dirty():
 		grid.update()
 	var current_board_position = get_board_position(entity.position)
+	if entity == player:
+		remove_target_highlights(current_board_position)
 	if target[0] < 0 or target[0] > 3 or target[1] < 0 or target[1] > 3:
 		return
 	if board[target[1]][target[0]] == null:
@@ -120,6 +130,8 @@ func move(entity, target):
 		board[target[1]][target[0]] = entity
 		entity.board_position = target
 		entity.has_moved = true
+	if entity == player:
+		highlight_targets(entity.board_position)
 
 func attack(entity, target):
 	if !is_in_range(entity.board_position, target, entity.range):
@@ -137,3 +149,23 @@ func _on_tile_click(tile):
 		move(active_entity, tile.board_position)
 	else:
 		attack(active_entity, tile.board_position)
+
+func highlight_targets(board_position):
+	var offsets = [Vector2i(1,0), Vector2i(0,1), Vector2i(-1,0), Vector2i(0,-1)]
+	for offset in offsets:
+		var target = board_position - offset
+		if is_valid_position(target):
+			highlight_tile(target)
+			
+func remove_target_highlights(board_position):
+	var offsets = [Vector2i(1,0), Vector2i(0,1), Vector2i(-1,0), Vector2i(0,-1)]
+	for offset in offsets:
+		var target = board_position - offset
+		if is_valid_position(target):
+			remove_highlight_tile(target)
+
+func highlight_tile(board_position):
+	terrain[board_position[1]][board_position[0]].get_node("BlinkSquare").self_modulate.a = .6
+
+func remove_highlight_tile(board_position):
+	terrain[board_position[1]][board_position[0]].get_node("BlinkSquare").self_modulate.a = 0

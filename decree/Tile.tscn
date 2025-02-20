@@ -15,3 +15,10 @@ scale = Vector2(2, 2)
 [node name="TileSelector7" type="Sprite2D" parent="."]
 position = Vector2(8, 8)
 texture = ExtResource("2_oyt2u")
+
+[node name="BlinkSquare" type="Polygon2D" parent="."]
+self_modulate = Color(1, 1, 1, 0)
+z_index = 1
+scale = Vector2(0.941176, 1)
+color = Color(0.580392, 0.72549, 0.862745, 1)
+polygon = PackedVector2Array(17, 0, 0, 0, 0, 16, 17, 16)
