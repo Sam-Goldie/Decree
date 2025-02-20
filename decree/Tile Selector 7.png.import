@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dnjaj1v8mkfs5"
-path="res://.godot/imported/Tile Selector.png-2a3f93000c079dcfbe746321e949537c.ctex"
+uid="uid://1ed74tdp6vy5"
+path="res://.godot/imported/Tile Selector 7.png-7ae739d16014125383951eb20bb88ad6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Tile Selector.png"
-dest_files=["res://.godot/imported/Tile Selector.png-2a3f93000c079dcfbe746321e949537c.ctex"]
+source_file="res://Tile Selector 7.png"
+dest_files=["res://.godot/imported/Tile Selector 7.png-7ae739d16014125383951eb20bb88ad6.ctex"]
 
 [params]
 
