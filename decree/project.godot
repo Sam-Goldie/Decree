@@ -15,10 +15,6 @@ run/main_scene="res://Level.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"
 
-[autoload]
-
-Level="*res://Level.tscn"
-
 [display]
 
 window/stretch/mode="canvas_items"

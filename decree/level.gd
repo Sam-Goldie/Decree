@@ -111,10 +111,8 @@ func damage(target, amount):
 	if target.hp <= 0:
 		target.free()
 	else:
-		var nodes = target.get_children()
-		var health = nodes[1]
+		var health = get_node("Navigation/%s/Path2D/PathFollow2D/Label" % target.name)
 		health.text = str(target.hp)
-
 
 func move(entity, target):
 	if grid.is_dirty():
@@ -169,3 +167,5 @@ func highlight_tile(board_position):
 
 func remove_highlight_tile(board_position):
 	terrain[board_position[1]][board_position[0]].get_node("BlinkSquare").self_modulate.a = 0
+
+	

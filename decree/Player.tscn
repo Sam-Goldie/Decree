@@ -1,16 +1,23 @@
-[gd_scene load_steps=3 format=3 uid="uid://umydvt437mmv"]
+[gd_scene load_steps=4 format=3 uid="uid://umydvt437mmv"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_pcjrc"]
 [ext_resource type="Texture2D" uid="uid://c62vr6u8sm8yl" path="res://player.png" id="2_blolq"]
 
+[sub_resource type="Curve2D" id="Curve2D_qrdci"]
+
 [node name="Player" type="Node2D"]
 script = ExtResource("1_pcjrc")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Path2D" type="Path2D" parent="."]
+curve = SubResource("Curve2D_qrdci")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="Path2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Path2D/PathFollow2D"]
 position = Vector2(8, 8)
 texture = ExtResource("2_blolq")
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="Path2D/PathFollow2D"]
 offset_right = 16.0
 offset_bottom = 23.0
 theme_override_colors/font_color = Color(0.845528, 0.00170455, 0.0718308, 1)

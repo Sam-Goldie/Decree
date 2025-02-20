@@ -111,7 +111,6 @@ position = Vector2(16, 32)
 
 [node name="Enemy" parent="Navigation" instance=ExtResource("3_3ige2")]
 visible = false
-position = Vector2(32, 16)
 
 [node name="Tile" parent="Navigation" instance=ExtResource("5_mdl2r")]
 visible = false
