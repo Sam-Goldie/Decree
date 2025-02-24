@@ -11,7 +11,7 @@ var player = player_scene.instantiate()
 @onready
 var active_entity = player
 @onready
-var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate()]
+var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate()]
 @onready
 var terrain = [
 	[tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate()], 
@@ -20,7 +20,7 @@ var terrain = [
 	[tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate()], 
 ]
 @onready
-var board = [[null, null, null, enemies[0]], [enemies[1], player, null, null], [null, null, null, enemies[2]],[null, null, enemies[3], null]]
+var board = [[null, null, null, enemies[0]], [enemies[1], player, null, null], [null, null, null, null],[enemies[2], null, null, null]]
 @onready
 var grid = AStarGrid2D.new()
 
@@ -72,6 +72,8 @@ func is_in_range(position1, position2, range):
 		return false 
 
 func take_enemy_turns():
+	var tween = create_tween()
+	tween.set_parallel(false)
 	clear_dead()
 	remove_target_highlights(player.board_position)
 	for enemy in enemies:
@@ -88,7 +90,7 @@ func take_enemy_turns():
 		var path = grid.get_id_path(active_entity.board_position, player.board_position, true)
 		if len(path) > 2:
 			var dest = path[1]
-			move(active_entity, dest)
+			move(active_entity, dest, tween)
 		var attack_target = active_entity.find_targets(player)
 		if attack_target != null:
 			damage(attack_target, active_entity.damage)
@@ -107,14 +109,17 @@ func clear_dead():
 		enemies.remove_at(dead_idx[-i-1])
 
 func damage(target, amount):
+	if target != player:
+		target.flash()
+		await target.flash_finished
 	target.hp -= amount
-	if target.hp <= 0:
-		target.free()
-	else:
+	if target.hp > 0:
 		var health = get_node("Navigation/%s/Path2D/PathFollow2D/Label" % target.name)
 		health.text = str(target.hp)
+	else:
+		target.free()
 
-func move(entity, target):
+func move(entity, target, tween):
 	if grid.is_dirty():
 		grid.update()
 	var current_board_position = get_board_position(entity.position)
@@ -123,7 +128,27 @@ func move(entity, target):
 	if target[0] < 0 or target[0] > 3 or target[1] < 0 or target[1] > 3:
 		return
 	if board[target[1]][target[0]] == null:
-		entity.position = target * 16
+		#var tween = create_tween()
+			#for sprite in get_children():
+			#tween.tween_property(sprite, "position", Vector2(0, 0), 1)
+		var path = entity.get_node("Path2D")
+		var curve = path.get_curve()
+		var path_follow = path.get_node("PathFollow2D")
+		#curve.add_point(Vector2(0,0))
+		var target_point = Vector2(target * 16)
+		var current_point = entity.position
+		var norm_distance = current_point.distance_to(target_point) / 6
+		var difference_type_alt = typeof(target_point - current_point)
+		tween.tween_property(entity, "position", Vector2(target * 16), 0.2)
+		#await tween.finished
+		#curve.add_point(Vector2(0,0))
+		#curve.add_point((Vector2(target * 16)) - entity.position)
+		#await path_follow.end_move
+		#path_follow.progress_ratio = 0
+		#curve.clear_points()
+		#entity.position = target * 16
+		#curve.add_point(difference)
+		#entity.position = target * 16
 		board[current_board_position[1]][current_board_position[0]] = null
 		board[target[1]][target[0]] = entity
 		entity.board_position = target
@@ -143,8 +168,9 @@ func attack(entity, target):
 func _on_tile_click(tile):
 	if active_entity != player:
 		return
+	var tween = create_tween()
 	if !active_entity.has_moved:
-		move(active_entity, tile.board_position)
+		move(active_entity, tile.board_position, tween)
 	else:
 		attack(active_entity, tile.board_position)
 
@@ -168,4 +194,5 @@ func highlight_tile(board_position):
 func remove_highlight_tile(board_position):
 	terrain[board_position[1]][board_position[0]].get_node("BlinkSquare").self_modulate.a = 0
 
-	
+#func _on_enemy_flash_finished():
+	#pass # Replace with function body.
