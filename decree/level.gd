@@ -116,6 +116,7 @@ func damage(target, amount):
 		target.free()
 
 func move(entity, target, tween):
+	var prev_position = entity.board_position
 	if grid.is_dirty():
 		grid.update()
 	var current_board_position = get_board_position(entity.position)
@@ -130,7 +131,7 @@ func move(entity, target, tween):
 		entity.board_position = target
 		entity.has_moved = true
 	if entity == player:
-		highlight_targets(entity.board_position)
+		player.prev_board_position = prev_position
 
 func attack(entity, target):
 	if !is_in_range(entity.board_position, target, entity.range):
@@ -147,8 +148,16 @@ func _on_tile_click(tile):
 	var tween = create_tween()
 	if !active_entity.has_moved:
 		move(active_entity, tile.board_position, tween)
+		highlight_targets(active_entity.board_position)
 	else:
 		attack(active_entity, tile.board_position)
+
+func _on_tile_right_click():
+	if active_entity != player:
+		return
+	var tween = create_tween()
+	if active_entity.has_moved:
+		revert_move(tween)
 
 func highlight_targets(board_position):
 	var offsets = [Vector2i(1,0), Vector2i(0,1), Vector2i(-1,0), Vector2i(0,-1)]
@@ -169,3 +178,7 @@ func highlight_tile(board_position):
 
 func remove_highlight_tile(board_position):
 	terrain[board_position[1]][board_position[0]].get_node("BlinkSquare").self_modulate.a = 0
+
+func revert_move(tween):
+	move(player, player.prev_board_position, tween)
+	player.has_moved = false
