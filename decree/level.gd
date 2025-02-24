@@ -109,9 +109,9 @@ func clear_dead():
 		enemies.remove_at(dead_idx[-i-1])
 
 func damage(target, amount):
-	if target != player:
-		target.flash()
-		await target.flash_finished
+	#if target != player:
+		#target.flash()
+		#await target.flash_finished
 	target.hp -= amount
 	if target.hp > 0:
 		var health = get_node("Navigation/%s/Path2D/PathFollow2D/Label" % target.name)

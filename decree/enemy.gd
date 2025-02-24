@@ -5,8 +5,6 @@ var hp : int
 var damage : int
 var has_moved : bool
 var board
-@onready var flash_player = $Path2D/PathFollow2D/Sprite2D/AnimationPlayer
-signal flash_finished
 
 func _ready():
 	var hp_display = str(hp)
@@ -24,7 +22,3 @@ func find_targets(player):
 		elif target != null:
 			result = target
 	return result
-
-func flash():
-	flash_player.play("flash")
-	flash_finished.emit()
