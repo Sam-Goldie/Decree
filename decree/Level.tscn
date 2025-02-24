@@ -111,7 +111,6 @@ position = Vector2(16, 32)
 
 [node name="Enemy" parent="Navigation" instance=ExtResource("3_3ige2")]
 visible = false
-position = Vector2(32, 16)
 
 [node name="Tile" parent="Navigation" instance=ExtResource("5_mdl2r")]
 visible = false
@@ -120,4 +119,5 @@ visible = false
 [connection signal="confirm_move" from="." to="Navigation/Player" method="_on_level_confirm_move"]
 [connection signal="attack" from="Navigation/Player" to="." method="_on_attack"]
 [connection signal="move" from="Navigation/Player" to="." method="_on_move"]
+[connection signal="flash_finished" from="Navigation/Enemy" to="." method="_on_enemy_flash_finished"]
 [connection signal="click" from="Navigation/Tile" to="." method="_on_tile_click"]
