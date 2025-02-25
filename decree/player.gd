@@ -1,6 +1,7 @@
 extends Node2D
 
 var board_position : Vector2i
+var prev_board_position : Vector2i
 var hp : int
 var damage : int
 var has_moved : bool
