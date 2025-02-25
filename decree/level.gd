@@ -143,7 +143,7 @@ func attack(entity, target):
 	take_enemy_turns()
 
 func _on_tile_click(tile):
-	if active_entity != player:
+	if active_entity != player or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
 	if !active_entity.has_moved:
