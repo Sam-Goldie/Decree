@@ -105,7 +105,7 @@ func take_enemy_turns():
 		#for enemy in enemies:
 			#if active_entity != enemy:
 				#grid.set_point_solid(enemy.board_position)
-		var path = grid.get_id_path(active_entity.board_position, player.board_position)
+		var path = grid.get_id_path(active_entity.board_position, player.board_position, true)
 		if len(path) > 2:
 			var dest = path[1]
 			move(active_entity, dest, tween)
@@ -165,7 +165,7 @@ func _on_tile_click(tile):
 	if active_entity != player or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
-	if !active_entity.has_moved:
+	if !active_entity.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null:
 		move(active_entity, tile.board_position, tween)
 		highlight_targets(active_entity.board_position)
 	else:
