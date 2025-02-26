@@ -16,7 +16,7 @@ func find_targets(player):
 	for offset in valid_offsets:
 		if offset[0] > board_position[0] or board_position[0] - offset[0] > len(board) - 1 or offset[1] > board_position[1] or board_position[1] - offset[1] > len(board[0]) - 1:
 			continue
-		var target = board[board_position[1] - offset[1]][board_position[0] - offset[0]]
+		var target = board[board_position[0] - offset[0]][board_position[1] - offset[1]]
 		if target == player:
 			return player
 		elif target != null:
