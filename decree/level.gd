@@ -7,48 +7,65 @@ signal confirm_move
 signal confirm_attack
 
 @onready
+var rng = RandomNumberGenerator.new()
+@onready
 var player = player_scene.instantiate()
+@onready
+var player_start = Vector2i(2,2)
 @onready
 var active_entity = player
 @onready
-var enemies = [enemy_scene.instantiate(), enemy_scene.instantiate(), enemy_scene.instantiate()]
+var enemy_count = 5
 @onready
-var terrain = [
-	[tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate()], 
-	[tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate()], 
-	[tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate()], 
-	[tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate(), tile_scene.instantiate()], 
-]
+var enemies = []
 @onready
-var board = [[null, null, null, enemies[0]], [enemies[1], player, null, null], [null, null, null, null],[enemies[2], null, null, null]]
+var BOARD_SIZE = Vector2i(5,5)
+@onready
+var terrain = []
+@onready
+var board = []
 @onready
 var grid = AStarGrid2D.new()
+
 
 func _ready():
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
-	player.hp = 3
-	player.damage = 1
-	player.range = 1
-	for enemy in enemies:
-		enemy.hp = 3
-		enemy.damage = 1
-		enemy.board = board
-	for i in range(board.size()):
-		for j in range(board[i].size()):
-			var current = board[j][i]
-			var tile = terrain[j][i]
-			tile.position = Vector2i(i * 16, j * 16)
-			tile.board_position = Vector2i(i, j)
+	for i in range(BOARD_SIZE[1]):
+		var row = []
+		var navi_row = []
+		for j in range(BOARD_SIZE[0]):
+			var tile = tile_scene.instantiate()
+			tile.position = Vector2i(j * 16, i * 16)
+			tile.board_position = Vector2i(j, i)
 			tile.get_child(1).self_modulate.a = 0
 			tile.get_node("BlinkSquare").self_modulate.a = 0
 			tile.connect("click", _on_tile_click.bind(tile))
 			terrain_layer.add_child(tile)
-			if current != null:
-				current.position = Vector2i(i * 16, j * 16)
-				current.board_position = Vector2i(i, j)
-				navigation_layer.add_child(current)
-	grid.size = Vector2i(4,4)
+			row.append(tile)
+			navi_row.append(null)
+		terrain.append(row)
+		board.append(navi_row)
+	player.hp = 3
+	player.damage = 1
+	player.range = 1
+	player.board_position = player_start
+	player.position = player_start * 16
+	navigation_layer.add_child(player)
+	board[player_start[0]][player_start[1]] = player
+	for i in range(enemy_count):
+		var enemy = enemy_scene.instantiate()
+		enemy.hp = 3
+		enemy.damage = 1
+		enemy.board = board
+		enemy.board_position = Vector2i(-1,-1)
+		enemies.append(enemy)
+		while enemy.board_position == Vector2i(-1,-1) or board[enemy.board_position[0]][enemy.board_position[1]] != null:
+			enemy.board_position = Vector2i(rng.randi_range(0, BOARD_SIZE[1] - 1), rng.randi_range(0, BOARD_SIZE[0] - 1))
+		enemy.position = enemy.board_position * 16
+		board[enemy.board_position[0]][enemy.board_position[1]] = enemy
+		navigation_layer.add_child(enemy)
+	grid.size = Vector2i(BOARD_SIZE[0], BOARD_SIZE[1])
 	grid.cell_size = Vector2(16,16)
 	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	grid.update()
@@ -78,14 +95,16 @@ func take_enemy_turns():
 	for enemy in enemies:
 		enemy.has_moved = false
 	for i in range(len(enemies)):
+		if grid.is_dirty():
+			grid.update()
 		if i >= len(enemies):
 			break
 		active_entity = enemies[i]
 		if active_entity == null:
 			continue
-		for enemy in enemies:
-			if active_entity != enemy:
-				grid.set_point_solid(enemy.board_position)
+		#for enemy in enemies:
+			#if active_entity != enemy:
+				#grid.set_point_solid(enemy.board_position)
 		var path = grid.get_id_path(active_entity.board_position, player.board_position, true)
 		if len(path) > 2:
 			var dest = path[1]
@@ -94,8 +113,8 @@ func take_enemy_turns():
 		if attack_target != null:
 			damage(attack_target, active_entity.damage)
 		clear_dead()
-		for enemy in enemies:
-			grid.set_point_solid(enemy.board_position, false)
+		#for enemy in enemies:
+			#grid.set_point_solid(enemy.board_position, false)
 	active_entity = player
 
 
@@ -122,12 +141,12 @@ func move(entity, target, tween):
 	var current_board_position = get_board_position(entity.position)
 	if entity == player:
 		remove_target_highlights(current_board_position)
-	if target[0] < 0 or target[0] > 3 or target[1] < 0 or target[1] > 3:
+	if target[0] < 0 or target[0] > BOARD_SIZE[1] - 1 or target[1] < 0 or target[1] > BOARD_SIZE[0] - 1:
 		return
-	if board[target[1]][target[0]] == null:
+	if board[target[0]][target[1]] == null:
 		tween.tween_property(entity, "position", Vector2(target * 16), 0.2)
-		board[current_board_position[1]][current_board_position[0]] = null
-		board[target[1]][target[0]] = entity
+		board[current_board_position[0]][current_board_position[1]] = null
+		board[target[0]][target[1]] = entity
 		entity.board_position = target
 		entity.has_moved = true
 	if entity == player:
@@ -137,8 +156,8 @@ func attack(entity, target):
 	if !is_in_range(entity.board_position, target, entity.range):
 		return
 	var attacker_board_position = get_board_position(entity.position)
-	if board[target[1]][target[0]] != null and board[target[1]][target[0]] != entity:
-		damage(board[target[1]][target[0]], entity.damage)
+	if board[target[0]][target[1]] != null and board[target[0]][target[1]] != entity:
+		damage(board[target[0]][target[1]], entity.damage)
 	entity.has_moved = false
 	take_enemy_turns()
 
@@ -146,7 +165,7 @@ func _on_tile_click(tile):
 	if active_entity != player or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
-	if !active_entity.has_moved:
+	if !active_entity.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null:
 		move(active_entity, tile.board_position, tween)
 		highlight_targets(active_entity.board_position)
 	else:
