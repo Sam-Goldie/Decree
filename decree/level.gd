@@ -3,6 +3,7 @@ extends Node2D
 var player_scene = preload("res://Player.tscn")
 var enemy_scene = preload("res://Enemy.tscn")
 var tile_scene = preload("res://Tile.tscn")
+var move_pattern_scene = preload("res://move_patterns.gd")
 signal confirm_move
 signal confirm_attack
 
@@ -23,12 +24,17 @@ var BOARD_SIZE = Vector2i(5,5)
 @onready
 var terrain = []
 @onready
+var rock_count = 3
+@onready
 var board = []
 @onready
-var grid = AStarGrid2D.new()
-
+var move_patterns = move_pattern_scene.new()
+@onready
+var grid
 
 func _ready():
+	grid = AStarGrid2D.new()
+	move_patterns.grid = grid
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
 	for i in range(BOARD_SIZE[1]):
@@ -46,6 +52,8 @@ func _ready():
 			navi_row.append(null)
 		terrain.append(row)
 		board.append(navi_row)
+	for i in range(rock_count):
+		terrain[rng.randi_range(0, BOARD_SIZE[1] - 1)][rng.randi_range(0, BOARD_SIZE[0] - 1)].get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
 	player.hp = 3
 	player.damage = 1
 	player.range = 1
@@ -95,28 +103,18 @@ func take_enemy_turns():
 	for enemy in enemies:
 		enemy.has_moved = false
 	for i in range(len(enemies)):
-		if grid.is_dirty():
-			grid.update()
 		if i >= len(enemies):
 			break
-		active_entity = enemies[i]
-		if active_entity == null:
+		var enemy = enemies[i]
+		if enemy == null:
 			continue
-		#for enemy in enemies:
-			#if active_entity != enemy:
-				#grid.set_point_solid(enemy.board_position)
-		var path = grid.get_id_path(active_entity.board_position, player.board_position, true)
-		if len(path) > 2:
-			var dest = path[1]
-			move(active_entity, dest, tween)
-		var attack_target = active_entity.find_targets(player)
+		var dest = move_patterns.shift_one_targeted(enemy, player.board_position)
+		if dest != null:
+			move(enemy, dest, tween)
+		var attack_target = enemy.find_targets(player)
 		if attack_target != null:
-			damage(attack_target, active_entity.damage)
+			damage(attack_target, enemy.damage)
 		clear_dead()
-		#for enemy in enemies:
-			#grid.set_point_solid(enemy.board_position, false)
-	active_entity = player
-
 
 func clear_dead():
 	var dead_idx = []
@@ -136,8 +134,6 @@ func damage(target, amount):
 
 func move(entity, target, tween):
 	var prev_position = entity.board_position
-	if grid.is_dirty():
-		grid.update()
 	var current_board_position = get_board_position(entity.position)
 	if entity == player:
 		remove_target_highlights(current_board_position)

@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://bl8kl8d2h8vdm"]
+
+[ext_resource type="Texture2D" uid="uid://di6y38yu85dr2" path="res://4_Seasons_Ground_Tiles.png" id="1_i34vh"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4cocn"]
+atlas = ExtResource("1_i34vh")
+region = Rect2(96, 32, 16, 16)
+
+[node name="Node2D" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(8, 8)
+texture = SubResource("AtlasTexture_4cocn")
