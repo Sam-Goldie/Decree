@@ -24,7 +24,7 @@ var BOARD_SIZE = Vector2i(5,5)
 @onready
 var terrain = []
 @onready
-var rock_count = 3
+var rock_count = 8
 @onready
 var board = []
 @onready
@@ -34,6 +34,9 @@ var grid
 
 func _ready():
 	grid = AStarGrid2D.new()
+	grid.size = Vector2i(BOARD_SIZE[0], BOARD_SIZE[1])
+	grid.cell_size = Vector2(16,16)
+	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	move_patterns.grid = grid
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
@@ -53,7 +56,10 @@ func _ready():
 		terrain.append(row)
 		board.append(navi_row)
 	for i in range(rock_count):
-		terrain[rng.randi_range(0, BOARD_SIZE[1] - 1)][rng.randi_range(0, BOARD_SIZE[0] - 1)].get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
+		var x = rng.randi_range(0, BOARD_SIZE[1] - 1)
+		var y = rng.randi_range(0, BOARD_SIZE[0] - 1)
+		terrain[x][y].get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
+		#grid.set_point_solid(Vector2i(x,y))
 	player.hp = 3
 	player.damage = 1
 	player.range = 1
@@ -73,9 +79,6 @@ func _ready():
 		enemy.position = enemy.board_position * 16
 		board[enemy.board_position[0]][enemy.board_position[1]] = enemy
 		navigation_layer.add_child(enemy)
-	grid.size = Vector2i(BOARD_SIZE[0], BOARD_SIZE[1])
-	grid.cell_size = Vector2(16,16)
-	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	grid.update()
 	
 func is_valid_position(board_position):
@@ -102,12 +105,18 @@ func take_enemy_turns():
 	remove_target_highlights(player.board_position)
 	for enemy in enemies:
 		enemy.has_moved = false
+	for i in range(BOARD_SIZE[1]):
+		for j in range(BOARD_SIZE[0]):
+			if terrain[i][j].get_node("Sprite2D").texture.region == Rect2(96, 32, 16, 16):
+				grid.set_point_solid(Vector2i(j, i))
 	for i in range(len(enemies)):
 		if i >= len(enemies):
 			break
 		var enemy = enemies[i]
 		if enemy == null:
 			continue
+		#grid.set_point_solid(Vector2i(2,2))
+		#grid.set_point_solid(Vector2i(2,2))
 		var dest = move_patterns.shift_one_targeted(enemy, player.board_position)
 		if dest != null:
 			move(enemy, dest, tween)
@@ -158,10 +167,14 @@ func attack(entity, target):
 	take_enemy_turns()
 
 func _on_tile_click(tile):
+	for i in range(BOARD_SIZE[1]):
+		for j in range(BOARD_SIZE[0]):
+			if terrain[i][j].get_node("Sprite2D").texture.region == Rect2(96, 32, 16, 16):
+				grid.set_point_solid(Vector2i(j, i))
 	if active_entity != player or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
-	if !active_entity.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null:
+	if !active_entity.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null and !grid.is_point_solid(Vector2i(tile.board_position[0], tile.board_position[1])):
 		move(active_entity, tile.board_position, tween)
 		highlight_targets(active_entity.board_position)
 	else:

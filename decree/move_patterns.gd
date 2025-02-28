@@ -8,6 +8,7 @@ func get_board_position(position : Vector2):
 	return snapped_position
 
 func shift_one_targeted(entity, target):
+	#grid.set_point_solid(Vector2i(2,2))
 	if grid.is_dirty():
 		grid.update()
 	var path = grid.get_id_path(entity.board_position, target, true)
