@@ -73,7 +73,7 @@ func _ready():
 		enemy.hp = 3
 		enemy.damage = 1
 		enemy.range = 1
-		enemy.speed = 2
+		enemy.speed = 1
 		enemy.board = board
 		enemy.board_position = Vector2i(-1,-1)
 		enemies.append(enemy)
@@ -120,7 +120,7 @@ func take_enemy_turns():
 			continue
 		#grid.set_point_solid(Vector2i(2,2))
 		#grid.set_point_solid(Vector2i(2,2))
-		var dest = move_patterns.shift_targeted(enemy, player.board_position)
+		var dest = move_patterns.shift_chase(enemy, player.board_position)
 		if len(dest) > 0:
 			for j in range(len(dest)):
 				var move_success = move(enemy, dest[j], tween)
@@ -183,17 +183,20 @@ func _on_tile_click(tile):
 	if active_entity != player or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
-	if !active_entity.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null and !grid.is_point_solid(Vector2i(tile.board_position[0], tile.board_position[1])):
-		move(active_entity, tile.board_position, tween)
-		highlight_targets(active_entity.board_position)
+	if !player.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null and !grid.is_point_solid(Vector2i(tile.board_position[0], tile.board_position[1])):
+		if is_in_range(player.board_position, tile.board_position, player.speed):
+			var dest = move_patterns.shift_target(player, tile.board_position)
+			if dest != null:
+				move(player, tile.board_position, tween)
+				highlight_targets(player.board_position)
 	else:
-		attack(active_entity, tile.board_position)
+		attack(player, tile.board_position)
 
 func _on_tile_right_click():
 	if active_entity != player:
 		return
 	var tween = create_tween()
-	if active_entity.has_moved:
+	if player.has_moved:
 		revert_move(tween)
 
 func highlight_targets(board_position):
