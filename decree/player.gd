@@ -6,6 +6,7 @@ var hp : int
 var damage : int
 var has_moved : bool
 var range : int
+var speed : int
 
 signal move(entity, target)
 signal attack(entity, target)

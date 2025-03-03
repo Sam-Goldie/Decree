@@ -63,6 +63,7 @@ func _ready():
 	player.hp = 3
 	player.damage = 1
 	player.range = 1
+	player.speed = 2
 	player.board_position = player_start
 	player.position = player_start * 16
 	navigation_layer.add_child(player)
@@ -71,6 +72,8 @@ func _ready():
 		var enemy = enemy_scene.instantiate()
 		enemy.hp = 3
 		enemy.damage = 1
+		enemy.range = 1
+		enemy.speed = 2
 		enemy.board = board
 		enemy.board_position = Vector2i(-1,-1)
 		enemies.append(enemy)
@@ -117,9 +120,12 @@ func take_enemy_turns():
 			continue
 		#grid.set_point_solid(Vector2i(2,2))
 		#grid.set_point_solid(Vector2i(2,2))
-		var dest = move_patterns.shift_one_targeted(enemy, player.board_position)
-		if dest != null:
-			move(enemy, dest, tween)
+		var dest = move_patterns.shift_targeted(enemy, player.board_position)
+		if len(dest) > 0:
+			for j in range(len(dest)):
+				var move_success = move(enemy, dest[j], tween)
+				if move_success:
+					break
 		var attack_target = enemy.find_targets(player)
 		if attack_target != null:
 			damage(attack_target, enemy.damage)
@@ -142,20 +148,23 @@ func damage(target, amount):
 		target.free()
 
 func move(entity, target, tween):
+	var did_move = false
 	var prev_position = entity.board_position
 	var current_board_position = get_board_position(entity.position)
 	if entity == player:
 		remove_target_highlights(current_board_position)
 	if target[0] < 0 or target[0] > BOARD_SIZE[1] - 1 or target[1] < 0 or target[1] > BOARD_SIZE[0] - 1:
-		return
+		return did_move
 	if board[target[0]][target[1]] == null:
 		tween.tween_property(entity, "position", Vector2(target * 16), 0.2)
 		board[current_board_position[0]][current_board_position[1]] = null
 		board[target[0]][target[1]] = entity
 		entity.board_position = target
 		entity.has_moved = true
+		did_move = true
 	if entity == player:
 		player.prev_board_position = prev_position
+	return did_move
 
 func attack(entity, target):
 	if !is_in_range(entity.board_position, target, entity.range):

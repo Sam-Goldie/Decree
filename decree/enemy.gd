@@ -5,6 +5,8 @@ var hp : int
 var damage : int
 var has_moved : bool
 var board
+var speed : int
+var range : int
 
 func _ready():
 	var hp_display = str(hp)

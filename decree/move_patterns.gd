@@ -7,23 +7,24 @@ func get_board_position(position : Vector2):
 	var snapped_position = (int_position - (int_position % Vector2i(16,16))) / 16
 	return snapped_position
 
-func shift_one_targeted(entity, target):
-	#grid.set_point_solid(Vector2i(2,2))
+func shift_targeted(entity, target):
 	if grid.is_dirty():
 		grid.update()
+	var dest = []
 	var path = grid.get_id_path(entity.board_position, target, true)
 	if len(path) > 2:
-		return path[1]
-	else: 
-		return null
-
-func shift_two_targeted(entity, target):
-	if grid.is_dirty():
-		grid.update()
-	var path = grid.get_id_path(entity.board_position, target, true)
-	if len(path) > 3:
-		return path[2]
-	elif len(path) > 2:
-		return path[1] 
-	else: 
-		return null
+		for i in range(1, entity.speed + 1):
+			dest.append(path[i])
+	dest.reverse()
+	return dest
+#
+#func shift_two_targeted(entity, target):
+	#if grid.is_dirty():
+		#grid.update()
+	#var path = grid.get_id_path(entity.board_position, target, true)
+	#var dest = []
+	#if len(path) > 2:
+		#for i in range(1,3):
+			#dest.append(path[i])
+	#dest.reverse()
+	#return dest
