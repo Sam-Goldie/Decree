@@ -22,7 +22,7 @@ func shift_target(entity, target):
 	if grid.is_dirty():
 		grid.update()
 	var path = grid.get_id_path(entity.board_position, target, false)
-	if len(path) > entity.speed + 1:
+	if len(path) > entity.speed + 1 or len(path) == 0:
 		return null
 	else:
 		return target
