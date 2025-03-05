@@ -20,7 +20,7 @@ var enemy_count = 5
 @onready
 var enemies = []
 @onready
-var BOARD_SIZE = Vector2i(5,5)
+var BOARD_SIZE = Vector2i(9,5)
 @onready
 var terrain = []
 @onready
@@ -40,13 +40,13 @@ func _ready():
 	move_patterns.grid = grid
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
-	for i in range(BOARD_SIZE[1]):
+	for i in range(BOARD_SIZE[0]):
 		var row = []
 		var navi_row = []
-		for j in range(BOARD_SIZE[0]):
+		for j in range(BOARD_SIZE[1]):
 			var tile = tile_scene.instantiate()
-			tile.position = Vector2i(j * 16, i * 16)
-			tile.board_position = Vector2i(j, i)
+			tile.position = Vector2i(i * 16, j * 16)
+			tile.board_position = Vector2i(i, j)
 			tile.get_child(1).self_modulate.a = 0
 			tile.get_node("BlinkSquare").self_modulate.a = 0
 			tile.connect("click", _on_tile_click.bind(tile))
@@ -56,8 +56,8 @@ func _ready():
 		terrain.append(row)
 		board.append(navi_row)
 	for i in range(rock_count):
-		var x = rng.randi_range(0, BOARD_SIZE[1] - 1)
-		var y = rng.randi_range(0, BOARD_SIZE[0] - 1)
+		var x = rng.randi_range(0, BOARD_SIZE[0] - 1)
+		var y = rng.randi_range(0, BOARD_SIZE[1] - 1)
 		terrain[x][y].get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
 		#grid.set_point_solid(Vector2i(x,y))
 	player.hp = 3
@@ -78,14 +78,14 @@ func _ready():
 		enemy.board_position = Vector2i(-1,-1)
 		enemies.append(enemy)
 		while enemy.board_position == Vector2i(-1,-1) or board[enemy.board_position[0]][enemy.board_position[1]] != null:
-			enemy.board_position = Vector2i(rng.randi_range(0, BOARD_SIZE[1] - 1), rng.randi_range(0, BOARD_SIZE[0] - 1))
+			enemy.board_position = Vector2i(rng.randi_range(0, BOARD_SIZE[0] - 1), rng.randi_range(0, BOARD_SIZE[1] - 1))
 		enemy.position = enemy.board_position * 16
 		board[enemy.board_position[0]][enemy.board_position[1]] = enemy
 		navigation_layer.add_child(enemy)
 	grid.update()
 	
 func is_valid_position(board_position):
-	if board_position[0] < 0 or board_position[0] > len(board) - 1 or board_position[1] < 0 or board_position[1] > len(board) - 1:
+	if board_position[0] < 0 or board_position[0] > BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > BOARD_SIZE[1] - 1:
 		return false
 	else:
 		return true
@@ -108,10 +108,10 @@ func take_enemy_turns():
 	remove_target_highlights(player.board_position)
 	for enemy in enemies:
 		enemy.has_moved = false
-	for i in range(BOARD_SIZE[1]):
-		for j in range(BOARD_SIZE[0]):
+	for i in range(BOARD_SIZE[0]):
+		for j in range(BOARD_SIZE[1]):
 			if terrain[i][j].get_node("Sprite2D").texture.region == Rect2(96, 32, 16, 16):
-				grid.set_point_solid(Vector2i(j, i))
+				grid.set_point_solid(Vector2i(i, j))
 	for i in range(len(enemies)):
 		if i >= len(enemies):
 			break
@@ -153,7 +153,7 @@ func move(entity, target, tween):
 	var current_board_position = get_board_position(entity.position)
 	if entity == player:
 		remove_target_highlights(current_board_position)
-	if target[0] < 0 or target[0] > BOARD_SIZE[1] - 1 or target[1] < 0 or target[1] > BOARD_SIZE[0] - 1:
+	if target[0] < 0 or target[0] > BOARD_SIZE[0] - 1 or target[1] < 0 or target[1] > BOARD_SIZE[1] - 1:
 		return did_move
 	if board[target[0]][target[1]] == null:
 		tween.tween_property(entity, "position", Vector2(target * 16), 0.2)
@@ -176,20 +176,22 @@ func attack(entity, target):
 	take_enemy_turns()
 
 func _on_tile_click(tile):
-	for i in range(BOARD_SIZE[1]):
-		for j in range(BOARD_SIZE[0]):
+	for i in range(BOARD_SIZE[0]):
+		for j in range(BOARD_SIZE[1]):
 			if terrain[i][j].get_node("Sprite2D").texture.region == Rect2(96, 32, 16, 16):
-				grid.set_point_solid(Vector2i(j, i))
+				grid.set_point_solid(Vector2i(i, j))
 	if active_entity != player or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
+	var is_point_solid = grid.is_point_solid(Vector2i(tile.board_position[0], tile.board_position[1]))
 	if !player.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null and !grid.is_point_solid(Vector2i(tile.board_position[0], tile.board_position[1])):
 		if is_in_range(player.board_position, tile.board_position, player.speed):
 			var dest = move_patterns.shift_target(player, tile.board_position)
 			if dest != null:
-				move(player, tile.board_position, tween)
-				highlight_targets(player.board_position)
-	else:
+				var did_move = move(player, tile.board_position, tween)
+				if did_move:
+					highlight_targets(player.board_position)
+	elif player.has_moved:
 		attack(player, tile.board_position)
 
 func _on_tile_right_click():
@@ -214,10 +216,10 @@ func remove_target_highlights(board_position):
 			remove_highlight_tile(target)
 
 func highlight_tile(board_position):
-	terrain[board_position[1]][board_position[0]].get_node("BlinkSquare").self_modulate.a = .6
+	terrain[board_position[0]][board_position[1]].get_node("BlinkSquare").self_modulate.a = .6
 
 func remove_highlight_tile(board_position):
-	terrain[board_position[1]][board_position[0]].get_node("BlinkSquare").self_modulate.a = 0
+	terrain[board_position[0]][board_position[1]].get_node("BlinkSquare").self_modulate.a = 0
 
 func revert_move(tween):
 	move(player, player.prev_board_position, tween)
