@@ -116,7 +116,7 @@ visible = false
 [node name="Tile" parent="Navigation" instance=ExtResource("5_mdl2r")]
 visible = false
 
-[node name="Node2D" parent="Navigation" instance=ExtResource("6_tewa0")]
+[node name="Rock" parent="Navigation" instance=ExtResource("6_tewa0")]
 visible = false
 
 [connection signal="confirm_attack" from="." to="Navigation/Player" method="_on_level_confirm_attack"]

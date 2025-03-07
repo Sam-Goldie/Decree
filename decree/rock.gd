@@ -3,6 +3,7 @@ extends Node2D
 var board_position : Vector2i
 var hp : int
 var grid : AStarGrid2D
+signal destroy_rock
 
 func _ready():
 	var hp_display = str(hp)
@@ -10,4 +11,5 @@ func _ready():
 
 func destroy():
 	grid.set_point_solid(board_position, false)
+	destroy_rock.emit()
 	self.queue_free()

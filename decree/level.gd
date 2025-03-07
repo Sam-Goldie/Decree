@@ -72,6 +72,7 @@ func _ready():
 		rock.position = Vector2i(x * 16, y * 16)
 		rock.hp = 2
 		rock.grid = grid
+		rock.connect("destroy_rock", destroy_rock.bind(x, y))
 		board[x][y] = rock 
 		navigation_layer.add_child(rock)
 		grid.set_point_solid(Vector2i(x,y))
@@ -252,3 +253,6 @@ func remove_highlight_tile(board_position):
 func revert_move(tween):
 	move(player, player.prev_board_position, tween)
 	player.has_moved = false
+
+func destroy_rock(x, y):
+	terrain[x][y].get_node("Sprite2D").texture.region = Rect2(48, 0, 16, 16)
