@@ -3,6 +3,7 @@ extends Node2D
 var board_position : Vector2i
 var hp : int
 var grid : AStarGrid2D
+var type : String
 signal destroy_rock
 
 func _ready():

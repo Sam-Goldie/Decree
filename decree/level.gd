@@ -27,6 +27,8 @@ var terrain = []
 @onready
 var rock_count = 8
 @onready
+var rocks = []
+@onready
 var board = []
 @onready
 var move_patterns = move_pattern_scene.new()
@@ -70,9 +72,11 @@ func _ready():
 		rock.position = Vector2i(x * 16, y * 16)
 		rock.hp = 2
 		rock.grid = grid
+		rock.type = "rock"
 		rock.connect("destroy_rock", destroy_rock.bind(x, y))
 		board[x][y] = rock 
 		navigation_layer.add_child(rock)
+		rocks.append(rock)
 		grid.set_point_solid(Vector2i(x,y))
 	for i in range(BOARD_SIZE[0]):
 		for j in range(BOARD_SIZE[1]):
@@ -135,11 +139,14 @@ func take_enemy_turns():
 	for enemy in enemies:
 		enemy.has_moved = false
 	for i in range(len(enemies)):
+		for rock in rocks:
+			grid.set_point_solid(Vector2i(rock.board_position[0], rock.board_position[1]))
 		if i >= len(enemies):
 			break
 		var enemy = enemies[i]
 		if enemy == null:
 			continue
+		var solidity = grid.is_point_solid(Vector2i(1,2))
 		var dest = move_patterns.shift_chase(enemy, player.board_position)
 		if len(dest) > 0:
 			for j in range(len(dest)):
@@ -150,6 +157,8 @@ func take_enemy_turns():
 		if attack_target != null:
 			damage(attack_target, enemy.damage)
 		clear_dead()
+		for rock in rocks:
+			grid.set_point_solid(Vector2i(rock.board_position[0], rock.board_position[1]), false)
 
 func clear_dead():
 	var dead_idx = []
@@ -158,6 +167,12 @@ func clear_dead():
 			dead_idx.append(i)
 	for i in range(len(dead_idx)):
 		enemies.remove_at(dead_idx[-i-1])
+	dead_idx = []
+	for i in range(len(rocks)):
+		if rocks[i] == null:
+			dead_idx.append(i)
+	for i in range(len(dead_idx)):
+		rocks.remove_at(dead_idx[-i-1])
 
 func damage(target, amount):
 	target.hp -= amount
@@ -171,20 +186,21 @@ func damage(target, amount):
 func move(entity, target, tween):
 	var did_move = false
 	var prev_position = entity.board_position
-	var current_board_position = get_board_position(entity.position)
 	if entity == player:
-		remove_target_highlights(current_board_position)
+		remove_target_highlights(prev_position)
 	if target[0] < 0 or target[0] > BOARD_SIZE[0] - 1 or target[1] < 0 or target[1] > BOARD_SIZE[1] - 1:
 		return did_move
 	if board[target[0]][target[1]] == null:
 		tween.tween_property(entity, "position", Vector2(target * 16), 0.2)
-		board[current_board_position[0]][current_board_position[1]] = null
+		board[prev_position[0]][prev_position[1]] = null
 		board[target[0]][target[1]] = entity
 		entity.board_position = target
 		entity.has_moved = true
 		did_move = true
 	if entity == player:
 		player.prev_board_position = prev_position
+		var entity_identity = entity
+		var banana
 	return did_move
 
 func attack(entity, target):
