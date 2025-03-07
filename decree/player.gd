@@ -7,10 +7,12 @@ var damage : int
 var has_moved : bool
 var range : int
 var speed : int
+var is_animate : bool
 
 signal move(entity, target)
 signal attack(entity, target)
 signal end_turn
+signal lose
 
 func _ready():
 	var hp_display = str(hp)
@@ -22,3 +24,6 @@ func _on_level_confirm_move():
 func _on_level_confirm_attack():
 	has_moved = false
 	end_turn.emit()
+
+func destroy():
+	lose.emit()

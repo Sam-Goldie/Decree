@@ -2,8 +2,11 @@ extends Node2D
 
 var player_scene = preload("res://Player.tscn")
 var enemy_scene = preload("res://Enemy.tscn")
+var rock_scene = preload("res://rock.tscn")
 var tile_scene = preload("res://Tile.tscn")
 var move_pattern_scene = preload("res://move_patterns.gd")
+var LABEL_PATH = "Navigation/%s/Path2D/PathFollow2D/Label"
+var ROCK_COORDS = Rect2(96, 32, 16, 16)
 signal confirm_move
 signal confirm_attack
 
@@ -41,25 +44,49 @@ func _ready():
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
 	for i in range(BOARD_SIZE[0]):
-		var row = []
 		var navi_row = []
+		var terrain_row = []
 		for j in range(BOARD_SIZE[1]):
+			navi_row.append(null)
+			terrain_row.append(null)
+		board.append(navi_row)
+		terrain.append(terrain_row)
+		
+	for i in range(rock_count):
+		var x = rng.randi_range(0, BOARD_SIZE[0] - 1)
+		var y = rng.randi_range(0, BOARD_SIZE[1] - 1)
+		if board[x][y] != null:
+			i -= 1
+			continue
+		var tile = tile_scene.instantiate()
+		tile.position = Vector2i(x * 16, y * 16)
+		tile.board_position = Vector2i(x, y)
+		tile.get_child(1).self_modulate.a = 0
+		tile.get_node("BlinkSquare").self_modulate.a = 0
+		tile.connect("click", _on_tile_click.bind(tile))
+		tile.get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
+		terrain_layer.add_child(tile)
+		terrain[x][y] = tile
+		var rock = rock_scene.instantiate()
+		rock.board_position = Vector2i(x,y)
+		rock.position = Vector2i(x * 16, y * 16)
+		rock.hp = 2
+		rock.grid = grid
+		board[x][y] = rock 
+		navigation_layer.add_child(rock)
+		grid.set_point_solid(Vector2i(x,y))
+	for i in range(BOARD_SIZE[0]):
+		for j in range(BOARD_SIZE[1]):
+			if board[i][j] != null:
+				continue
 			var tile = tile_scene.instantiate()
 			tile.position = Vector2i(i * 16, j * 16)
 			tile.board_position = Vector2i(i, j)
 			tile.get_child(1).self_modulate.a = 0
 			tile.get_node("BlinkSquare").self_modulate.a = 0
 			tile.connect("click", _on_tile_click.bind(tile))
+			terrain[i][j] = tile
 			terrain_layer.add_child(tile)
-			row.append(tile)
-			navi_row.append(null)
-		terrain.append(row)
-		board.append(navi_row)
-	for i in range(rock_count):
-		var x = rng.randi_range(0, BOARD_SIZE[0] - 1)
-		var y = rng.randi_range(0, BOARD_SIZE[1] - 1)
-		terrain[x][y].get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
-		#grid.set_point_solid(Vector2i(x,y))
 	player.hp = 3
 	player.damage = 1
 	player.range = 1
@@ -108,10 +135,10 @@ func take_enemy_turns():
 	remove_target_highlights(player.board_position)
 	for enemy in enemies:
 		enemy.has_moved = false
-	for i in range(BOARD_SIZE[0]):
-		for j in range(BOARD_SIZE[1]):
-			if terrain[i][j].get_node("Sprite2D").texture.region == Rect2(96, 32, 16, 16):
-				grid.set_point_solid(Vector2i(i, j))
+	#for i in range(BOARD_SIZE[0]):
+		#for j in range(BOARD_SIZE[1]):
+			#if terrain[i][j].get_node("Sprite2D").texture.region == Rect2(96, 32, 16, 16):
+				#grid.set_point_solid(Vector2i(i, j))
 	for i in range(len(enemies)):
 		if i >= len(enemies):
 			break
@@ -142,10 +169,11 @@ func clear_dead():
 func damage(target, amount):
 	target.hp -= amount
 	if target.hp > 0:
-		var health = get_node("Navigation/%s/Path2D/PathFollow2D/Label" % target.name)
+		var health = get_node(LABEL_PATH % target.name)
 		health.text = str(target.hp)
 	else:
-		target.free()
+		board[target.board_position[0]][target.board_position[1]] = null
+		target.destroy()
 
 func move(entity, target, tween):
 	var did_move = false
@@ -176,10 +204,10 @@ func attack(entity, target):
 	take_enemy_turns()
 
 func _on_tile_click(tile):
-	for i in range(BOARD_SIZE[0]):
-		for j in range(BOARD_SIZE[1]):
-			if terrain[i][j].get_node("Sprite2D").texture.region == Rect2(96, 32, 16, 16):
-				grid.set_point_solid(Vector2i(i, j))
+	#for i in range(BOARD_SIZE[0]):
+		#for j in range(BOARD_SIZE[1]):
+			#if board[i][j] != null:
+				#grid.set_point_solid(Vector2i(i, j))
 	if active_entity != player or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
