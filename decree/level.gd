@@ -7,8 +7,6 @@ var tile_scene = preload("res://Tile.tscn")
 var move_pattern_scene = preload("res://move_patterns.gd")
 var LABEL_PATH = "Navigation/%s/Path2D/PathFollow2D/Label"
 var ROCK_COORDS = Rect2(96, 32, 16, 16)
-signal confirm_move
-signal confirm_attack
 
 @onready
 var rng = RandomNumberGenerator.new()
@@ -136,18 +134,12 @@ func take_enemy_turns():
 	remove_target_highlights(player.board_position)
 	for enemy in enemies:
 		enemy.has_moved = false
-	#for i in range(BOARD_SIZE[0]):
-		#for j in range(BOARD_SIZE[1]):
-			#if terrain[i][j].get_node("Sprite2D").texture.region == Rect2(96, 32, 16, 16):
-				#grid.set_point_solid(Vector2i(i, j))
 	for i in range(len(enemies)):
 		if i >= len(enemies):
 			break
 		var enemy = enemies[i]
 		if enemy == null:
 			continue
-		#grid.set_point_solid(Vector2i(2,2))
-		#grid.set_point_solid(Vector2i(2,2))
 		var dest = move_patterns.shift_chase(enemy, player.board_position)
 		if len(dest) > 0:
 			for j in range(len(dest)):
@@ -205,10 +197,6 @@ func attack(entity, target):
 	take_enemy_turns()
 
 func _on_tile_click(tile):
-	#for i in range(BOARD_SIZE[0]):
-		#for j in range(BOARD_SIZE[1]):
-			#if board[i][j] != null:
-				#grid.set_point_solid(Vector2i(i, j))
 	if active_entity != player or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()

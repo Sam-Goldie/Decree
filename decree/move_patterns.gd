@@ -26,14 +26,3 @@ func shift_target(entity, target):
 		return null
 	else:
 		return target
-
-#func shift_two_targeted(entity, target):
-	#if grid.is_dirty():
-		#grid.update()
-	#var path = grid.get_id_path(entity.board_position, target, true)
-	#var dest = []
-	#if len(path) > 2:
-		#for i in range(1,3):
-			#dest.append(path[i])
-	#dest.reverse()
-	#return dest

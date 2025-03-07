@@ -119,8 +119,6 @@ visible = false
 [node name="Rock" parent="Navigation" instance=ExtResource("6_tewa0")]
 visible = false
 
-[connection signal="confirm_attack" from="." to="Navigation/Player" method="_on_level_confirm_attack"]
-[connection signal="confirm_move" from="." to="Navigation/Player" method="_on_level_confirm_move"]
 [connection signal="attack" from="Navigation/Player" to="." method="_on_attack"]
 [connection signal="move" from="Navigation/Player" to="." method="_on_move"]
 [connection signal="click" from="Navigation/Tile" to="." method="_on_tile_click"]
