@@ -161,10 +161,11 @@ func take_enemy_turns():
 					break
 		var attack_target = enemy.find_targets(player)
 		if attack_target != null:
-			damage(attack_target, enemy.damage)
+			attack(enemy, attack_target)
 		clear_dead()
 		for rock in rocks:
 			grid.set_point_solid(Vector2i(rock.board_position[0], rock.board_position[1]), false)
+		player.has_moved = false
 
 func clear_dead():
 	var dead_idx = []
@@ -213,13 +214,14 @@ func move(entity, target, tween):
 	return did_move
 
 func attack(entity, target):
-	if !is_in_range(entity.board_position, target, entity.range):
+	var entity_pos = entity.board_position
+	var target_pos = target.board_position
+	if !is_in_range(entity_pos, target_pos, entity.range):
 		return
-	var attacker_board_position = get_board_position(entity.position)
-	if board[target[0]][target[1]] != null and board[target[0]][target[1]] != entity:
-		damage(board[target[0]][target[1]], entity.damage)
-	entity.has_moved = false
-	take_enemy_turns()
+	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
+		damage(board[target_pos[0]][target_pos[1]], entity.damage)
+	if entity == player:
+		take_enemy_turns()
 
 func _on_tile_click(tile):
 	if active_entity != player or player.board_position == tile.board_position:
@@ -234,7 +236,7 @@ func _on_tile_click(tile):
 				if did_move:
 					highlight_targets(player.board_position)
 	elif player.has_moved:
-		attack(player, tile.board_position)
+		attack(player, tile)
 
 func _on_tile_right_click():
 	if active_entity != player:
