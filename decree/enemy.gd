@@ -8,6 +8,8 @@ var board
 var speed : int
 var range : int
 var is_animate : bool
+var enemies : Array
+var player 
 
 func _ready():
 	var hp_display = str(hp)

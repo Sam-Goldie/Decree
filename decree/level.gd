@@ -17,7 +17,7 @@ var player_start = Vector2i(2,2)
 @onready
 var active_entity = player
 @onready
-var enemy_count = 5
+var enemy_count = 3
 @onready
 var enemies = []
 @onready
@@ -36,6 +36,8 @@ var move_patterns = move_pattern_scene.new()
 var grid
 
 func _ready():
+	$EndScreen.connect("restart", _restart_game)
+	player.connect("lose", _on_player_lose)
 	grid = AStarGrid2D.new()
 	grid.size = Vector2i(BOARD_SIZE[0], BOARD_SIZE[1])
 	grid.cell_size = Vector2(16,16)
@@ -105,6 +107,8 @@ func _ready():
 		enemy.range = 1
 		enemy.speed = 1
 		enemy.board = board
+		enemy.enemies = enemies
+		enemy.player = player
 		enemy.board_position = Vector2i(-1,-1)
 		enemies.append(enemy)
 		while enemy.board_position == Vector2i(-1,-1) or board[enemy.board_position[0]][enemy.board_position[1]] != null:
@@ -132,6 +136,8 @@ func is_in_range(position1, position2, range):
 		return false 
 
 func take_enemy_turns():
+	if len(enemies) == 0:
+		_on_player_win()
 	var tween = create_tween()
 	tween.set_parallel(false)
 	clear_dead()
@@ -163,7 +169,7 @@ func take_enemy_turns():
 func clear_dead():
 	var dead_idx = []
 	for i in range(len(enemies)):
-		if enemies[i] == null:
+		if enemies[i] == null or enemies[i].is_queued_for_deletion():
 			dead_idx.append(i)
 	for i in range(len(dead_idx)):
 		enemies.remove_at(dead_idx[-i-1])
@@ -182,6 +188,9 @@ func damage(target, amount):
 	else:
 		board[target.board_position[0]][target.board_position[1]] = null
 		target.destroy()
+		clear_dead()
+		if len(enemies) == 0:
+			_on_player_win()
 
 func move(entity, target, tween):
 	var did_move = false
@@ -260,3 +269,14 @@ func revert_move(tween):
 
 func destroy_rock(x, y):
 	terrain[x][y].get_node("Sprite2D").texture.region = Rect2(48, 0, 16, 16)
+
+func _on_player_lose():
+	$EndScreen/TextEdit.text = "YOU LOSE YOU LOSE YOU LOSE"
+	$EndScreen.visible = true
+	
+func _on_player_win():
+	$EndScreen/TextEdit.text = "YOU WIN YOU WIN YOU WIN"
+	$EndScreen.visible = true
+	
+func _restart_game():
+	get_tree().reload_current_scene()

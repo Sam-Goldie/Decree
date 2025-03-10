@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=4 uid="uid://cc7nwj1biibuw"]
+[gd_scene load_steps=10 format=4 uid="uid://cc7nwj1biibuw"]
 
 [ext_resource type="Texture2D" uid="uid://di6y38yu85dr2" path="res://4_Seasons_Ground_Tiles.png" id="1_ruedu"]
 [ext_resource type="Script" path="res://level.gd" id="2_2idh2"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://c4drp01fqj2e7" path="res://Enemy.tscn" id="3_3ige2"]
 [ext_resource type="PackedScene" uid="uid://ba12pskq3mu7k" path="res://Tile.tscn" id="5_mdl2r"]
 [ext_resource type="PackedScene" uid="uid://bl8kl8d2h8vdm" path="res://rock.tscn" id="6_tewa0"]
+[ext_resource type="PackedScene" uid="uid://d1vaeg48gbx1f" path="res://end_screen.tscn" id="7_yoh5a"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ojr4x"]
 texture = ExtResource("1_ruedu")
@@ -119,7 +120,11 @@ visible = false
 [node name="Rock" parent="Navigation" instance=ExtResource("6_tewa0")]
 visible = false
 
+[node name="EndScreen" parent="." instance=ExtResource("7_yoh5a")]
+visible = false
+
 [connection signal="attack" from="Navigation/Player" to="." method="_on_attack"]
+[connection signal="lose" from="Navigation/Player" to="." method="_on_player_lose"]
 [connection signal="move" from="Navigation/Player" to="." method="_on_move"]
 [connection signal="click" from="Navigation/Tile" to="." method="_on_tile_click"]
 [connection signal="right_click" from="Navigation/Tile" to="." method="_on_tile_right_click"]
