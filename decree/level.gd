@@ -175,7 +175,7 @@ func clear_dead():
 		enemies.remove_at(dead_idx[-i-1])
 	dead_idx = []
 	for i in range(len(rocks)):
-		if rocks[i] == null:
+		if rocks[i] == null or rocks[i].is_queued_for_deletion():
 			dead_idx.append(i)
 	for i in range(len(dead_idx)):
 		rocks.remove_at(dead_idx[-i-1])
