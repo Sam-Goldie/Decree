@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://d1vaeg48gbx1f"]
+
+[ext_resource type="Script" path="res://end_screen.gd" id="1_l6lkd"]
+
+[sub_resource type="Theme" id="Theme_mdifo"]
+default_font_size = 12
+
+[node name="EndScreen" type="Popup"]
+title = "You Lose"
+size = Vector2i(180, 100)
+visible = true
+theme = SubResource("Theme_mdifo")
+script = ExtResource("1_l6lkd")
+
+[node name="TextEdit" type="Label" parent="."]
+offset_right = 180.0
+offset_bottom = 17.0
+text = "YOU LOSE YOU LOSE YOU LOSE"

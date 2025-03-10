@@ -7,6 +7,9 @@ var has_moved : bool
 var board
 var speed : int
 var range : int
+var is_animate : bool
+var enemies : Array
+var player 
 
 func _ready():
 	var hp_display = str(hp)
@@ -24,3 +27,6 @@ func find_targets(player):
 		elif target != null:
 			result = target
 	return result
+
+func destroy():
+	self.queue_free()
