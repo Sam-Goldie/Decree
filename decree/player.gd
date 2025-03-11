@@ -16,7 +16,7 @@ signal lose
 
 func _ready():
 	var hp_display = str(hp)
-	$Path2D/PathFollow2D/Label.text = hp_display
+	$Path2D/PathFollow2D/Sprite2D/Label.text = hp_display
 
 func _on_level_confirm_move():
 	has_moved = true

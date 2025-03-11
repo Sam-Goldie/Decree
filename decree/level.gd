@@ -5,7 +5,7 @@ var enemy_scene = preload("res://Enemy.tscn")
 var rock_scene = preload("res://rock.tscn")
 var tile_scene = preload("res://Tile.tscn")
 var move_pattern_scene = preload("res://move_patterns.gd")
-var LABEL_PATH = "Navigation/%s/Path2D/PathFollow2D/Label"
+var LABEL_PATH = "Navigation/%s/Path2D/PathFollow2D/Sprite2D/Label"
 var ROCK_COORDS = Rect2(96, 32, 16, 16)
 
 @onready
@@ -17,7 +17,7 @@ var player_start = Vector2i(2,2)
 @onready
 var active_entity = player
 @onready
-var enemy_count = 3
+var enemy_count = 1
 @onready
 var enemies = []
 @onready
@@ -161,7 +161,7 @@ func take_enemy_turns():
 					break
 		var attack_target = enemy.find_targets(player)
 		if attack_target != null:
-			attack(enemy, attack_target)
+			attack(enemy, attack_target, tween)
 		clear_dead()
 		for rock in rocks:
 			grid.set_point_solid(Vector2i(rock.board_position[0], rock.board_position[1]), false)
@@ -210,16 +210,37 @@ func move(entity, target, tween):
 	if entity == player:
 		player.prev_board_position = prev_position
 		var entity_identity = entity
-		var banana
 	return did_move
 
-func attack(entity, target):
+func attack(entity, target, tween):
 	var entity_pos = entity.board_position
 	var target_pos = target.board_position
 	if !is_in_range(entity_pos, target_pos, entity.range):
 		return
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
+		#await get_tree().create_timer(1.5).timeout
 		damage(board[target_pos[0]][target_pos[1]], entity.damage)
+		var player = entity.get_node("AnimationPlayer")
+		if player != null:
+			var offset = entity_pos - target_pos
+			if abs(offset[0]) > abs(offset[1]):
+				if offset[0] < 0:
+					player.play("attack_right")
+				else:
+					player.play("attack_left")
+			else:
+				if offset[1] < 0:
+					player.play("attack_down")
+				else:
+					player.play("attack_up")
+				#Vector2i(0,1):
+					#player.play("attack_up")
+				#Vector2i(0,-1):
+					#player.play("attack_down")
+				#Vector2i(1,0):
+					#player.play("attack_left")
+				#Vector2i(-1,0):
+					#player.play("attack_right")
 	if entity == player:
 		take_enemy_turns()
 
@@ -236,7 +257,7 @@ func _on_tile_click(tile):
 				if did_move:
 					highlight_targets(player.board_position)
 	elif player.has_moved:
-		attack(player, tile)
+		attack(player, tile, tween)
 
 func _on_tile_right_click():
 	if active_entity != player:

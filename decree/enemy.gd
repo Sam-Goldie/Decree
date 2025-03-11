@@ -13,7 +13,7 @@ var player
 
 func _ready():
 	var hp_display = str(hp)
-	$Path2D/PathFollow2D/Label.text = hp_display
+	$Path2D/PathFollow2D/Sprite2D/Label.text = hp_display
 
 func find_targets(player):
 	var result = null

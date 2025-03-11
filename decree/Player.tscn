@@ -22,7 +22,9 @@ script = ExtResource("2_q4y88")
 position = Vector2(8, 8)
 texture = ExtResource("2_blolq")
 
-[node name="Label" type="Label" parent="Path2D/PathFollow2D"]
-offset_right = 16.0
-offset_bottom = 23.0
+[node name="Label" type="Label" parent="Path2D/PathFollow2D/Sprite2D"]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 15.0
 theme_override_colors/font_color = Color(0.845528, 0.00170455, 0.0718308, 1)

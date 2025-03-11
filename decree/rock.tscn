@@ -12,7 +12,9 @@ curve = SubResource("Curve2D_463vn")
 
 [node name="PathFollow2D" type="PathFollow2D" parent="Path2D"]
 
-[node name="Label" type="Label" parent="Path2D/PathFollow2D"]
+[node name="Sprite2D" type="Sprite2D" parent="Path2D/PathFollow2D"]
+
+[node name="Label" type="Label" parent="Path2D/PathFollow2D/Sprite2D"]
 offset_right = 16.0
 offset_bottom = 23.0
 theme_override_colors/font_color = Color(0.845528, 0.00170455, 0.0718308, 1)
