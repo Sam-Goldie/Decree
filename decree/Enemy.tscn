@@ -1,8 +1,9 @@
-[gd_scene load_steps=13 format=3 uid="uid://c4drp01fqj2e7"]
+[gd_scene load_steps=8 format=3 uid="uid://c4drp01fqj2e7"]
 
 [ext_resource type="Script" path="res://enemy.gd" id="1_a12p4"]
 [ext_resource type="Texture2D" uid="uid://br3n70ti57btw" path="res://Enemy.png" id="1_xvn8d"]
 [ext_resource type="Script" path="res://path_follow_2d.gd" id="2_ob0ix"]
+[ext_resource type="PackedScene" uid="uid://drxtkedfmor55" path="res://entity_animator.tscn" id="4_go16q"]
 
 [sub_resource type="Curve2D" id="Curve2D_vynlp"]
 resource_local_to_scene = true
@@ -24,92 +25,6 @@ resource_local_to_scene = true
 shader = SubResource("Shader_22fs5")
 shader_parameter/flash_color = Color(1, 0.0980392, 0.0784314, 1)
 shader_parameter/flash_value = null
-
-[sub_resource type="Animation" id="Animation_mm3np"]
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(),
-"transitions": PackedFloat32Array(),
-"update": 0,
-"values": []
-}
-
-[sub_resource type="Animation" id="Animation_kr1vo"]
-resource_name = "attack"
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.233333, 0.4, 0.6, 1),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
-"update": 0,
-"values": [Vector2(0, 0), Vector2(4, 0), Vector2(4, 0), Vector2(-4, 0), Vector2(0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_8ip35"]
-resource_name = "attack_right"
-length = 0.8333
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.233333, 0.466667, 0.8),
-"transitions": PackedFloat32Array(1, 1, 1, 1),
-"update": 0,
-"values": [Vector2(0, 0), Vector2(-4, 0), Vector2(4, 0), Vector2(0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_whllq"]
-resource_name = "attack_up"
-length = 0.8333
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.233333, 0.4, 0.666667, 0.8333),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
-"update": 0,
-"values": [Vector2(0, 0), Vector2(0, 4), Vector2(0, 4), Vector2(0, -4), Vector2(0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_b1os2"]
-resource_name = "attack_down"
-length = 0.8333
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.233333, 0.4, 0.666667, 0.8333),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
-"update": 0,
-"values": [Vector2(0, 0), Vector2(0, -4), Vector2(0, -4), Vector2(0, 4), Vector2(0, 0)]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_vgyj2"]
-_data = {
-"RESET": SubResource("Animation_mm3np"),
-"attack_down": SubResource("Animation_b1os2"),
-"attack_left": SubResource("Animation_kr1vo"),
-"attack_right": SubResource("Animation_8ip35"),
-"attack_up": SubResource("Animation_whllq")
-}
 
 [node name="Enemy" type="Node2D"]
 script = ExtResource("1_a12p4")
@@ -133,8 +48,4 @@ offset_right = 16.0
 offset_bottom = 23.0
 theme_override_colors/font_color = Color(0.847059, 0, 0.0705882, 1)
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-root_node = NodePath("../Path2D/PathFollow2D/Sprite2D")
-libraries = {
-"": SubResource("AnimationLibrary_vgyj2")
-}
+[node name="AnimationPlayer" parent="." instance=ExtResource("4_go16q")]

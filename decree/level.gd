@@ -233,14 +233,6 @@ func attack(entity, target, tween):
 					player.play("attack_down")
 				else:
 					player.play("attack_up")
-				#Vector2i(0,1):
-					#player.play("attack_up")
-				#Vector2i(0,-1):
-					#player.play("attack_down")
-				#Vector2i(1,0):
-					#player.play("attack_left")
-				#Vector2i(-1,0):
-					#player.play("attack_right")
 	if entity == player:
 		take_enemy_turns()
 

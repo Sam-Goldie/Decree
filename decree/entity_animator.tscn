@@ -1,0 +1,44 @@
+[gd_scene load_steps=8 format=3 uid="uid://drxtkedfmor55"]
+
+[ext_resource type="Animation" uid="uid://ckh3odkgsjb0o" path="res://attack_left.res" id="1_fuv2m"]
+[ext_resource type="Animation" uid="uid://bfpkpmw4kk570" path="res://attack_right.res" id="2_33dym"]
+[ext_resource type="Animation" uid="uid://d1aajrol8oo2r" path="res://attack_up.res" id="3_qsvfy"]
+[ext_resource type="Animation" uid="uid://dclsqqngan000" path="res://attack_down.res" id="4_xebmy"]
+
+[sub_resource type="Animation" id="Animation_mm3np"]
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(),
+"transitions": PackedFloat32Array(),
+"update": 0,
+"values": []
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_vgyj2"]
+_data = {
+"RESET": SubResource("Animation_mm3np"),
+"attack_down": ExtResource("4_xebmy"),
+"attack_left": ExtResource("1_fuv2m"),
+"attack_right": ExtResource("2_33dym"),
+"attack_up": ExtResource("3_qsvfy")
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_7ce3j"]
+_data = {
+"attack_down": ExtResource("4_xebmy"),
+"attack_left": ExtResource("1_fuv2m"),
+"attack_right": ExtResource("2_33dym"),
+"attack_up": ExtResource("3_qsvfy")
+}
+
+[node name="AnimationPlayer" type="AnimationPlayer"]
+root_node = NodePath("../Path2D/PathFollow2D/Sprite2D")
+libraries = {
+"": SubResource("AnimationLibrary_vgyj2"),
+"attack": SubResource("AnimationLibrary_7ce3j")
+}
