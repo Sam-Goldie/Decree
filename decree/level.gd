@@ -15,11 +15,13 @@ var player = player_scene.instantiate()
 @onready
 var player_start = Vector2i(2,2)
 @onready
-var active_entity = player
+var is_player_turn = true
 @onready
-var enemy_count = 1
+var enemy_count = 3
 @onready
 var enemies = []
+@onready
+var enemy_idx = 0
 @onready
 var BOARD_SIZE = Vector2i(9,5)
 @onready
@@ -34,6 +36,7 @@ var board = []
 var move_patterns = move_pattern_scene.new()
 @onready
 var grid
+
 
 func _ready():
 	$EndScreen.connect("restart", _restart_game)
@@ -135,38 +138,42 @@ func is_in_range(position1, position2, range):
 	else:
 		return false 
 
-func take_enemy_turns():
+# THIS SHOULD BE TAKE ENEMY TURN SINGULAR, AND TRIGGER OFF OF SIGNALS FROM PREVIOUS TURN
+func take_enemy_turn():
 	if len(enemies) == 0:
 		_on_player_win()
-	var tween = create_tween()
-	tween.set_parallel(false)
-	clear_dead()
-	remove_target_highlights(player.board_position)
-	for enemy in enemies:
-		enemy.has_moved = false
-	for i in range(len(enemies)):
-		for rock in rocks:
-			grid.set_point_solid(Vector2i(rock.board_position[0], rock.board_position[1]))
-		if i >= len(enemies):
-			break
-		var enemy = enemies[i]
-		if enemy == null:
-			continue
-		var solidity = grid.is_point_solid(Vector2i(1,2))
-		var dest = move_patterns.shift_chase(enemy, player.board_position)
-		if len(dest) > 0:
-			for j in range(len(dest)):
-				var move_success = move(enemy, dest[j], tween)
-				if move_success:
-					break
-		var attack_target = enemy.find_targets(player)
-		if attack_target != null:
-			attack(enemy, attack_target, tween)
+		return
+	if enemy_idx > len(enemies) - 1:
+		enemy_idx = 0
 		clear_dead()
-		for rock in rocks:
-			grid.set_point_solid(Vector2i(rock.board_position[0], rock.board_position[1]), false)
-		player.has_moved = false
-
+		is_player_turn = true
+		return	
+	var tween = create_tween()
+	remove_target_highlights(player.board_position)
+	var enemy = enemies[enemy_idx]
+	var anim_player = enemy.get_node("AnimationPlayer")
+	enemy_idx += 1
+	if enemy == null:
+		take_enemy_turn()
+	for rock in rocks:
+		grid.set_point_solid(Vector2i(rock.board_position[0], rock.board_position[1]))	
+	var dest = move_patterns.shift_chase(enemy, player.board_position)
+	if len(dest) > 0:
+		for j in range(len(dest)):
+			var move_success = move(enemy, dest[j], tween)
+			if move_success:
+				await tween.finished
+				break
+	var attack_target = enemy.find_targets(player)
+	var did_attack = false
+	if attack_target != null:
+		attack(enemy, attack_target, tween)
+		await anim_player.animation_finished
+		did_attack = true
+	for rock in rocks:
+		grid.set_point_solid(Vector2i(rock.board_position[0], rock.board_position[1]), false)
+	take_enemy_turn()
+	
 func clear_dead():
 	var dead_idx = []
 	for i in range(len(enemies)):
@@ -220,24 +227,22 @@ func attack(entity, target, tween):
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
 		#await get_tree().create_timer(1.5).timeout
 		damage(board[target_pos[0]][target_pos[1]], entity.damage)
-		var player = entity.get_node("AnimationPlayer")
-		if player != null:
+		var anim_player = entity.get_node("AnimationPlayer")
+		if anim_player != null:
 			var offset = entity_pos - target_pos
 			if abs(offset[0]) > abs(offset[1]):
 				if offset[0] < 0:
-					player.play("attack_right")
+					anim_player.play("attack_right")
 				else:
-					player.play("attack_left")
+					anim_player.play("attack_left")
 			else:
 				if offset[1] < 0:
-					player.play("attack_down")
+					anim_player.play("attack_down")
 				else:
-					player.play("attack_up")
-	if entity == player:
-		take_enemy_turns()
+					anim_player.play("attack_up")
 
 func _on_tile_click(tile):
-	if active_entity != player or player.board_position == tile.board_position:
+	if !is_player_turn or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
 	var is_point_solid = grid.is_point_solid(Vector2i(tile.board_position[0], tile.board_position[1]))
@@ -248,11 +253,16 @@ func _on_tile_click(tile):
 				var did_move = move(player, tile.board_position, tween)
 				if did_move:
 					highlight_targets(player.board_position)
+					await tween.finished
 	elif player.has_moved:
 		attack(player, tile, tween)
+		var anim_player = player.get_node("AnimationPlayer")
+		await anim_player.animation_finished
+		player.has_moved = false
+		take_enemy_turn()
 
 func _on_tile_right_click():
-	if active_entity != player:
+	if !is_player_turn:
 		return
 	var tween = create_tween()
 	if player.has_moved:
