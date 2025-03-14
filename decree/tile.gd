@@ -7,9 +7,9 @@ signal right_click
 
 func _process(delta):
 	if is_hovered():
-		$TileSelector7.self_modulate.a = 1
+		$TileSelector.self_modulate.a = 1
 	else:
-		$TileSelector7.self_modulate.a = 0
+		$TileSelector.self_modulate.a = 0
 
 func _input(event):
 	if event is InputEventMouseButton and event.is_pressed() and not event.is_echo():

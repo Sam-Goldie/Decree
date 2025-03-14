@@ -5,7 +5,7 @@ var enemy_scene = preload("res://Enemy.tscn")
 var rock_scene = preload("res://rock.tscn")
 var tile_scene = preload("res://Tile.tscn")
 var move_pattern_scene = preload("res://move_patterns.gd")
-var LABEL_PATH = "Navigation/%s/Path2D/PathFollow2D/Label"
+var LABEL_PATH = "Navigation/%s/Path2D/PathFollow2D/Sprite2D/Label"
 var ROCK_COORDS = Rect2(96, 32, 16, 16)
 
 @onready
@@ -15,17 +15,19 @@ var player = player_scene.instantiate()
 @onready
 var player_start = Vector2i(2,2)
 @onready
-var active_entity = player
+var is_player_turn = true
 @onready
 var enemy_count = 3
 @onready
 var enemies = []
 @onready
+var enemy_idx = 0
+@onready
 var BOARD_SIZE = Vector2i(9,5)
 @onready
 var terrain = []
 @onready
-var rock_count = 8
+var rock_count = 36
 @onready
 var rocks = []
 @onready
@@ -34,6 +36,7 @@ var board = []
 var move_patterns = move_pattern_scene.new()
 @onready
 var grid
+
 
 func _ready():
 	$EndScreen.connect("restart", _restart_game)
@@ -53,7 +56,14 @@ func _ready():
 			terrain_row.append(null)
 		board.append(navi_row)
 		terrain.append(terrain_row)
-		
+	player.hp = 3
+	player.damage = 1
+	player.range = 1
+	player.speed = 2
+	player.board_position = player_start
+	player.position = player_start * 16
+	navigation_layer.add_child(player)
+	board[player_start[0]][player_start[1]] = player
 	for i in range(rock_count):
 		var x = rng.randi_range(0, BOARD_SIZE[0] - 1)
 		var y = rng.randi_range(0, BOARD_SIZE[1] - 1)
@@ -63,7 +73,7 @@ func _ready():
 		var tile = tile_scene.instantiate()
 		tile.position = Vector2i(x * 16, y * 16)
 		tile.board_position = Vector2i(x, y)
-		tile.get_child(1).self_modulate.a = 0
+		tile.get_node("TileSelector").self_modulate.a = 0
 		tile.get_node("BlinkSquare").self_modulate.a = 0
 		tile.connect("click", _on_tile_click.bind(tile))
 		tile.get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
@@ -79,10 +89,9 @@ func _ready():
 		board[x][y] = rock 
 		navigation_layer.add_child(rock)
 		rocks.append(rock)
-		grid.set_point_solid(Vector2i(x,y))
 	for i in range(BOARD_SIZE[0]):
 		for j in range(BOARD_SIZE[1]):
-			if board[i][j] != null:
+			if board[i][j] != null and board[i][j] != player:
 				continue
 			var tile = tile_scene.instantiate()
 			tile.position = Vector2i(i * 16, j * 16)
@@ -92,14 +101,6 @@ func _ready():
 			tile.connect("click", _on_tile_click.bind(tile))
 			terrain[i][j] = tile
 			terrain_layer.add_child(tile)
-	player.hp = 3
-	player.damage = 1
-	player.range = 1
-	player.speed = 2
-	player.board_position = player_start
-	player.position = player_start * 16
-	navigation_layer.add_child(player)
-	board[player_start[0]][player_start[1]] = player
 	for i in range(enemy_count):
 		var enemy = enemy_scene.instantiate()
 		enemy.hp = 3
@@ -135,37 +136,45 @@ func is_in_range(position1, position2, range):
 	else:
 		return false 
 
-func take_enemy_turns():
+func take_enemy_turn():
 	if len(enemies) == 0:
 		_on_player_win()
-	var tween = create_tween()
-	tween.set_parallel(false)
-	clear_dead()
-	remove_target_highlights(player.board_position)
-	for enemy in enemies:
-		enemy.has_moved = false
-	for i in range(len(enemies)):
-		for rock in rocks:
-			grid.set_point_solid(Vector2i(rock.board_position[0], rock.board_position[1]))
-		if i >= len(enemies):
-			break
-		var enemy = enemies[i]
-		if enemy == null:
-			continue
-		var solidity = grid.is_point_solid(Vector2i(1,2))
-		var dest = move_patterns.shift_chase(enemy, player.board_position)
-		if len(dest) > 0:
-			for j in range(len(dest)):
-				var move_success = move(enemy, dest[j], tween)
-				if move_success:
-					break
-		var attack_target = enemy.find_targets(player)
-		if attack_target != null:
-			damage(attack_target, enemy.damage)
+		return
+	if enemy_idx > len(enemies) - 1:
+		enemy_idx = 0
 		clear_dead()
-		for rock in rocks:
-			grid.set_point_solid(Vector2i(rock.board_position[0], rock.board_position[1]), false)
-
+		is_player_turn = true
+		return
+	for entity in enemies:
+		grid.set_point_solid(entity.board_position)
+	for rock in rocks:
+		grid.set_point_solid(rock.board_position)
+	var tween = create_tween()
+	remove_target_highlights(player.board_position)
+	var enemy = enemies[enemy_idx]
+	var anim_player = enemy.get_node("AnimationPlayer")
+	enemy_idx += 1
+	if enemy == null:
+		take_enemy_turn()
+	var dest = move_patterns.shift_chase(enemy, player.board_position)
+	if len(dest) > 0:
+		for j in range(len(dest)):
+			var move_success = move(enemy, dest[j], tween)
+			if move_success:
+				await tween.finished
+				break
+	var attack_target = enemy.find_targets(player)
+	var did_attack = false
+	if attack_target != null:
+		attack(enemy, attack_target, tween)
+		await anim_player.animation_finished
+		did_attack = true
+	for entity in enemies:
+		grid.set_point_solid(entity.board_position, false)
+	for rock in rocks:
+		grid.set_point_solid(rock.board_position, false)
+	take_enemy_turn()
+	
 func clear_dead():
 	var dead_idx = []
 	for i in range(len(enemies)):
@@ -208,36 +217,62 @@ func move(entity, target, tween):
 		did_move = true
 	if entity == player:
 		player.prev_board_position = prev_position
-		var entity_identity = entity
-		var banana
+	if did_move:
+		grid.set_point_solid(prev_position, false)
 	return did_move
 
-func attack(entity, target):
-	if !is_in_range(entity.board_position, target, entity.range):
+func attack(entity, target, tween):
+	var entity_pos = entity.board_position
+	var target_pos = target.board_position
+	if !is_in_range(entity_pos, target_pos, entity.range):
 		return
-	var attacker_board_position = get_board_position(entity.position)
-	if board[target[0]][target[1]] != null and board[target[0]][target[1]] != entity:
-		damage(board[target[0]][target[1]], entity.damage)
-	entity.has_moved = false
-	take_enemy_turns()
+	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
+		#await get_tree().create_timer(1.5).timeout
+		damage(board[target_pos[0]][target_pos[1]], entity.damage)
+		var anim_player = entity.get_node("AnimationPlayer")
+		if anim_player != null:
+			var offset = entity_pos - target_pos
+			if abs(offset[0]) > abs(offset[1]):
+				if offset[0] < 0:
+					anim_player.play("attack_right")
+				else:
+					anim_player.play("attack_left")
+			else:
+				if offset[1] < 0:
+					anim_player.play("attack_down")
+				else:
+					anim_player.play("attack_up")
 
 func _on_tile_click(tile):
-	if active_entity != player or player.board_position == tile.board_position:
+	if !is_player_turn or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
-	var is_point_solid = grid.is_point_solid(Vector2i(tile.board_position[0], tile.board_position[1]))
-	if !player.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null and !grid.is_point_solid(Vector2i(tile.board_position[0], tile.board_position[1])):
+	for entity in enemies:
+		grid.set_point_solid(entity.board_position)
+	if !player.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null and !grid.is_point_solid(tile.board_position):
 		if is_in_range(player.board_position, tile.board_position, player.speed):
 			var dest = move_patterns.shift_target(player, tile.board_position)
 			if dest != null:
 				var did_move = move(player, tile.board_position, tween)
 				if did_move:
 					highlight_targets(player.board_position)
+					await tween.finished
+		for rock in rocks:
+			grid.set_point_solid(rock.board_position, false)
+		for entity in enemies:
+			grid.set_point_solid(entity.board_position)
 	elif player.has_moved:
-		attack(player, tile.board_position)
+		attack(player, tile, tween)
+		var anim_player = player.get_node("AnimationPlayer")
+		if anim_player.is_playing():
+			await anim_player.animation_finished
+		player.has_moved = false
+		for entity in enemies:
+			grid.set_point_solid(entity.board_position)
+		take_enemy_turn()
 
 func _on_tile_right_click():
-	if active_entity != player:
+	if !is_player_turn:
 		return
 	var tween = create_tween()
 	if player.has_moved:
