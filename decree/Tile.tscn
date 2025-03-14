@@ -19,7 +19,7 @@ script = ExtResource("1_vd0qm")
 position = Vector2(8, 8)
 texture = SubResource("AtlasTexture_bkiho")
 
-[node name="TileSelector7" type="Sprite2D" parent="."]
+[node name="TileSelector" type="Sprite2D" parent="."]
 position = Vector2(8, 8)
 texture = ExtResource("2_oyt2u")
 

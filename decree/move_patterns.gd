@@ -12,7 +12,7 @@ func shift_chase(entity, target):
 		grid.update()
 	var dest = []
 	var path = grid.get_id_path(entity.board_position, target, true)
-	if len(path) > 2:
+	if len(path) > 1:
 		for i in range(1, entity.speed + 1):
 			dest.append(path[i])
 	dest.reverse()
