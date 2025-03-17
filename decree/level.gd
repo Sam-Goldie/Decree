@@ -2,11 +2,10 @@ extends Node2D
 
 var player_scene = preload("res://Player.tscn")
 var enemy_scene = preload("res://Enemy.tscn")
+var archer_scene = preload("res://archer.tscn")
 var rock_scene = preload("res://rock.tscn")
 var tile_scene = preload("res://Tile.tscn")
 var move_pattern_scene = preload("res://move_patterns.gd")
-var LABEL_PATH = "Navigation/%s/Path2D/PathFollow2D/Sprite2D/Label"
-var ROCK_COORDS = Rect2(96, 32, 16, 16)
 
 @onready
 var rng = RandomNumberGenerator.new()
@@ -23,11 +22,9 @@ var enemies = []
 @onready
 var enemy_idx = 0
 @onready
-var BOARD_SIZE = Vector2i(9,5)
-@onready
 var terrain = []
 @onready
-var rock_count = 36
+var rock_count = 22
 @onready
 var rocks = []
 @onready
@@ -42,16 +39,16 @@ func _ready():
 	$EndScreen.connect("restart", _restart_game)
 	player.connect("lose", _on_player_lose)
 	grid = AStarGrid2D.new()
-	grid.size = Vector2i(BOARD_SIZE[0], BOARD_SIZE[1])
+	grid.size = Vector2i(Globals.BOARD_SIZE[0], Globals.BOARD_SIZE[1])
 	grid.cell_size = Vector2(16,16)
 	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	move_patterns.grid = grid
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
-	for i in range(BOARD_SIZE[0]):
+	for i in range(Globals.BOARD_SIZE[0]):
 		var navi_row = []
 		var terrain_row = []
-		for j in range(BOARD_SIZE[1]):
+		for j in range(Globals.BOARD_SIZE[1]):
 			navi_row.append(null)
 			terrain_row.append(null)
 		board.append(navi_row)
@@ -65,8 +62,8 @@ func _ready():
 	navigation_layer.add_child(player)
 	board[player_start[0]][player_start[1]] = player
 	for i in range(rock_count):
-		var x = rng.randi_range(0, BOARD_SIZE[0] - 1)
-		var y = rng.randi_range(0, BOARD_SIZE[1] - 1)
+		var x = rng.randi_range(0, Globals.BOARD_SIZE[0] - 1)
+		var y = rng.randi_range(0, Globals.BOARD_SIZE[1] - 1)
 		if board[x][y] != null:
 			i -= 1
 			continue
@@ -89,8 +86,8 @@ func _ready():
 		board[x][y] = rock 
 		navigation_layer.add_child(rock)
 		rocks.append(rock)
-	for i in range(BOARD_SIZE[0]):
-		for j in range(BOARD_SIZE[1]):
+	for i in range(Globals.BOARD_SIZE[0]):
+		for j in range(Globals.BOARD_SIZE[1]):
 			if board[i][j] != null and board[i][j] != player:
 				continue
 			var tile = tile_scene.instantiate()
@@ -102,10 +99,10 @@ func _ready():
 			terrain[i][j] = tile
 			terrain_layer.add_child(tile)
 	for i in range(enemy_count):
-		var enemy = enemy_scene.instantiate()
+		var enemy = archer_scene.instantiate()
 		enemy.hp = 3
 		enemy.damage = 1
-		enemy.range = 1
+		enemy.range = 100
 		enemy.speed = 1
 		enemy.board = board
 		enemy.enemies = enemies
@@ -113,14 +110,14 @@ func _ready():
 		enemy.board_position = Vector2i(-1,-1)
 		enemies.append(enemy)
 		while enemy.board_position == Vector2i(-1,-1) or board[enemy.board_position[0]][enemy.board_position[1]] != null:
-			enemy.board_position = Vector2i(rng.randi_range(0, BOARD_SIZE[0] - 1), rng.randi_range(0, BOARD_SIZE[1] - 1))
+			enemy.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
 		enemy.position = enemy.board_position * 16
 		board[enemy.board_position[0]][enemy.board_position[1]] = enemy
 		navigation_layer.add_child(enemy)
 	grid.update()
 	
 func is_valid_position(board_position):
-	if board_position[0] < 0 or board_position[0] > BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > BOARD_SIZE[1] - 1:
+	if board_position[0] < 0 or board_position[0] > Globals.BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > Globals.BOARD_SIZE[1] - 1:
 		return false
 	else:
 		return true
@@ -156,7 +153,7 @@ func take_enemy_turn():
 	enemy_idx += 1
 	if enemy == null:
 		take_enemy_turn()
-	var dest = move_patterns.shift_chase(enemy, player.board_position)
+	var dest = move_patterns.shift_chase_axis(enemy, player.board_position)
 	if len(dest) > 0:
 		for j in range(len(dest)):
 			var move_success = move(enemy, dest[j], tween)
@@ -192,7 +189,7 @@ func clear_dead():
 func damage(target, amount):
 	target.hp -= amount
 	if target.hp > 0:
-		var health = get_node(LABEL_PATH % target.name)
+		var health = get_node(Globals.LABEL_PATH % target.name)
 		health.text = str(target.hp)
 	else:
 		board[target.board_position[0]][target.board_position[1]] = null
@@ -206,7 +203,7 @@ func move(entity, target, tween):
 	var prev_position = entity.board_position
 	if entity == player:
 		remove_target_highlights(prev_position)
-	if target[0] < 0 or target[0] > BOARD_SIZE[0] - 1 or target[1] < 0 or target[1] > BOARD_SIZE[1] - 1:
+	if target[0] < 0 or target[0] > Globals.BOARD_SIZE[0] - 1 or target[1] < 0 or target[1] > Globals.BOARD_SIZE[1] - 1:
 		return did_move
 	if board[target[0]][target[1]] == null:
 		tween.tween_property(entity, "position", Vector2(target * 16), 0.2)
