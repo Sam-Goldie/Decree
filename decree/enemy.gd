@@ -10,6 +10,7 @@ var range : int
 var is_animate : bool
 var enemies : Array
 var player
+var type
 
 func _ready():
 	var hp_display = str(hp)

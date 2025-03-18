@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://bls60hk4dcame"]
+[gd_scene load_steps=7 format=3 uid="uid://bls60hk4dcame"]
 
 [ext_resource type="PackedScene" uid="uid://c4drp01fqj2e7" path="res://Enemy.tscn" id="1_pb65l"]
 [ext_resource type="Script" path="res://archer.gd" id="2_qvh1g"]
+[ext_resource type="Texture2D" uid="uid://d160d6efqvatp" path="res://Archer.png" id="3_6dmpl"]
 
 [sub_resource type="Curve2D" id="Curve2D_pau6u"]
 resource_local_to_scene = true
@@ -32,3 +33,4 @@ curve = SubResource("Curve2D_pau6u")
 
 [node name="Sprite2D" parent="Path2D/PathFollow2D" index="0"]
 material = SubResource("ShaderMaterial_ejlye")
+texture = ExtResource("3_6dmpl")
