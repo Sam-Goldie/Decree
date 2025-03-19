@@ -249,6 +249,7 @@ func attack(entity, target, tween):
 	var target_pos = target.board_position
 	if !is_in_range(entity_pos, target_pos, entity.range):
 		return
+	player.has_moved = false
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
 		#await get_tree().create_timer(1.5).timeout
 		damage(board[target_pos[0]][target_pos[1]], entity.damage)
@@ -288,6 +289,8 @@ func _on_tile_click(tile):
 			#grid.set_point_solid(entity.board_position)
 	elif player.has_moved:
 		attack(player, tile, tween)
+		if player.has_moved:
+			return
 		var anim_player = player.get_node("AnimationPlayer")
 		if anim_player.is_playing():
 			await anim_player.animation_finished
