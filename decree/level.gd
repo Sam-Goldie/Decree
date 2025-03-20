@@ -61,6 +61,7 @@ func _ready():
 	player.speed = 2
 	player.board_position = player_start
 	player.position = player_start * 16
+	player.is_enemy = false
 	navigation_layer.add_child(player)
 	board[player_start[0]][player_start[1]] = player
 	for i in range(rock_count):
@@ -85,6 +86,7 @@ func _ready():
 		rock.grid = grid
 		rock.type = "rock"
 		rock.connect("destroy_rock", destroy_rock.bind(x, y))
+		rock.is_enemy = false
 		board[x][y] = rock 
 		navigation_layer.add_child(rock)
 		rocks.append(rock)
@@ -111,6 +113,7 @@ func _ready():
 		warrior.enemies = enemies
 		warrior.player = player
 		warrior.board_position = Vector2i(-1,-1)
+		warrior.is_enemy = true
 		enemies.append(warrior)
 		while warrior.board_position == Vector2i(-1,-1) or board[warrior.board_position[0]][warrior.board_position[1]] != null:
 			warrior.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
@@ -128,6 +131,7 @@ func _ready():
 		archer.enemies = enemies
 		archer.player = player
 		archer.board_position = Vector2i(-1,-1)
+		archer.is_enemy = true
 		enemies.append(archer)
 		while archer.board_position == Vector2i(-1,-1) or board[archer.board_position[0]][archer.board_position[1]] != null:
 			archer.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
@@ -135,7 +139,15 @@ func _ready():
 		board[archer.board_position[0]][archer.board_position[1]] = archer
 		navigation_layer.add_child(archer)
 	grid.update()
-	
+
+func _process(_delta):
+	var pos = get_global_mouse_position()
+	var board_pos = get_board_position(pos)
+	if is_valid_position(board_pos) and board[board_pos[0]][board_pos[1]] != null and board[board_pos[0]][board_pos[1]].is_enemy:
+		show_turn_order()
+	else:
+		hide_turn_order()
+
 func is_valid_position(board_position):
 	if board_position[0] < 0 or board_position[0] > Globals.BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > Globals.BOARD_SIZE[1] - 1:
 		return false
@@ -362,3 +374,19 @@ func _on_player_win():
 	
 func _restart_game():
 	get_tree().reload_current_scene()
+
+func show_turn_order():
+	for enemy in enemies:
+		var turn_display = enemy.get_node(Globals.TURN_ORDER_PATH)
+		if turn_display.visible == true:
+			return
+		else:
+			turn_display.visible = true
+			
+func hide_turn_order():
+	for enemy in enemies:
+		var turn_display = enemy.get_node(Globals.TURN_ORDER_PATH)
+		if turn_display.visible == false:
+			return
+		else:
+			turn_display.visible = false

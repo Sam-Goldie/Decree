@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://bls60hk4dcame"]
+[gd_scene load_steps=7 format=3 uid="uid://d10yhm5nxyri7"]
 
 [ext_resource type="PackedScene" uid="uid://c4drp01fqj2e7" path="res://Enemy.tscn" id="1_pb65l"]
 [ext_resource type="Script" path="res://archer.gd" id="2_qvh1g"]
