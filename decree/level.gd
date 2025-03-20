@@ -376,8 +376,13 @@ func _restart_game():
 	get_tree().reload_current_scene()
 
 func show_turn_order():
-	for enemy in enemies:
+	if grid.is_dirty():
+		grid.update()
+	clear_dead()
+	for i in range(len(enemies)):
+		var enemy = enemies[i]
 		var turn_display = enemy.get_node(Globals.TURN_ORDER_PATH)
+		turn_display.text = str(i + 1)
 		if turn_display.visible == true:
 			return
 		else:
