@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://c5b4m7ot4dgxv"]
+
+[node name="Pip" type="Polygon2D"]
+color = Color(1, 0.313726, 0.305882, 1)
+polygon = PackedVector2Array(0, 0, 2, 0, 2, 1, 0, 1)

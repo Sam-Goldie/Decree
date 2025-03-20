@@ -244,8 +244,7 @@ func clear_dead():
 func damage(target, amount):
 	target.hp -= amount
 	if target.hp > 0:
-		var health = get_node(Globals.LABEL_PATH % target.name)
-		health.text = str(target.hp)
+		var health = target.get_node("Path2D/PathFollow2D/Sprite2D/HealthDisplay").reduce_health(amount)
 	else:
 		board[target.board_position[0]][target.board_position[1]] = null
 		target.destroy()

@@ -9,8 +9,7 @@ var is_enemy : bool
 signal destroy_rock
 
 func _ready():
-	var hp_display = str(hp)
-	$Path2D/PathFollow2D/Sprite2D/Label.text = hp_display
+	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)
 
 func destroy():
 	grid.set_point_solid(board_position, false)
