@@ -7,7 +7,7 @@ var damage : int
 var has_moved : bool
 var range : int
 var speed : int
-var is_animate : bool
+var is_enemy : bool
 
 signal move(entity, target)
 signal attack(entity, target)

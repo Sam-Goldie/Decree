@@ -4,6 +4,8 @@ var board_position : Vector2i
 var hp : int
 var grid : AStarGrid2D
 var type : String
+var is_enemy : bool
+
 signal destroy_rock
 
 func _ready():

@@ -7,7 +7,7 @@ var has_moved : bool
 var board
 var speed : int
 var range : int
-var is_animate : bool
+var is_enemy : bool
 var enemies : Array
 var player
 var type
