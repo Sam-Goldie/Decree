@@ -1,9 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://c4drp01fqj2e7"]
+[gd_scene load_steps=9 format=3 uid="uid://c4drp01fqj2e7"]
 
 [ext_resource type="Script" path="res://enemy.gd" id="1_a12p4"]
 [ext_resource type="Texture2D" uid="uid://br3n70ti57btw" path="res://Enemy.png" id="1_xvn8d"]
 [ext_resource type="Script" path="res://path_follow_2d.gd" id="2_ob0ix"]
 [ext_resource type="PackedScene" uid="uid://drxtkedfmor55" path="res://entity_animator.tscn" id="4_go16q"]
+[ext_resource type="PackedScene" uid="uid://c4fwmdh8clkco" path="res://health_display.tscn" id="4_i1yb3"]
 
 [sub_resource type="Curve2D" id="Curve2D_vynlp"]
 resource_local_to_scene = true
@@ -42,17 +43,12 @@ material = SubResource("ShaderMaterial_qn0dj")
 texture = ExtResource("1_xvn8d")
 offset = Vector2(8, 8)
 
-[node name="Label" type="Label" parent="Path2D/PathFollow2D/Sprite2D"]
+[node name="HealthDisplay" parent="Path2D/PathFollow2D/Sprite2D" instance=ExtResource("4_i1yb3")]
+
+[node name="TurnOrder" type="Label" parent="Path2D/PathFollow2D/Sprite2D"]
 z_index = 1
 offset_right = 16.0
 offset_bottom = 23.0
 theme_override_colors/font_color = Color(0.847059, 0, 0.0705882, 1)
-
-[node name="TurnOrder" type="Label" parent="Path2D/PathFollow2D/Sprite2D"]
-offset_right = 16.0
-offset_bottom = 23.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-text = "5"
-horizontal_alignment = 2
 
 [node name="AnimationPlayer" parent="." instance=ExtResource("4_go16q")]

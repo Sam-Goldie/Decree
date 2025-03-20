@@ -1,8 +1,9 @@
-[gd_scene load_steps=12 format=3 uid="uid://umydvt437mmv"]
+[gd_scene load_steps=13 format=3 uid="uid://umydvt437mmv"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_pcjrc"]
 [ext_resource type="Texture2D" uid="uid://c62vr6u8sm8yl" path="res://player.png" id="2_blolq"]
 [ext_resource type="Script" path="res://path_follow_2d.gd" id="2_q4y88"]
+[ext_resource type="PackedScene" uid="uid://c4fwmdh8clkco" path="res://health_display.tscn" id="4_jsqnd"]
 [ext_resource type="PackedScene" uid="uid://drxtkedfmor55" path="res://entity_animator.tscn" id="4_q27wn"]
 [ext_resource type="Animation" uid="uid://dclsqqngan000" path="res://attack_down.res" id="5_cibcw"]
 [ext_resource type="Animation" uid="uid://ckh3odkgsjb0o" path="res://attack_left.res" id="6_cije5"]
@@ -50,10 +51,7 @@ script = ExtResource("2_q4y88")
 texture = ExtResource("2_blolq")
 offset = Vector2(8, 8)
 
-[node name="Label" type="Label" parent="Path2D/PathFollow2D/Sprite2D"]
-offset_right = 16.0
-offset_bottom = 23.0
-theme_override_colors/font_color = Color(0.845528, 0.00170455, 0.0718308, 1)
+[node name="HealthDisplay" parent="Path2D/PathFollow2D/Sprite2D" instance=ExtResource("4_jsqnd")]
 
 [node name="AnimationPlayer" parent="." instance=ExtResource("4_q27wn")]
 libraries = {

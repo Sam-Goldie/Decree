@@ -14,7 +14,7 @@ var type
 
 func _ready():
 	var hp_display = str(hp)
-	$Path2D/PathFollow2D/Sprite2D/Label.text = hp_display
+	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)
 
 func find_targets(next_move):
 	var target = board_position
