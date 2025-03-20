@@ -55,7 +55,7 @@ func _ready():
 			terrain_row.append(null)
 		board.append(navi_row)
 		terrain.append(terrain_row)
-	player.hp = 3
+	player.hp = 5
 	player.damage = 1
 	player.range = 1
 	player.speed = 2
@@ -154,6 +154,12 @@ func is_in_range(position1, position2, range):
 		return false 
 
 func take_enemy_turn():
+	for i in range(Globals.BOARD_SIZE[0]):
+		for j in range(Globals.BOARD_SIZE[1]):
+			if board[i][j] == null:
+				grid.set_point_weight_scale(Vector2i(i, j), 1)
+			else:
+				grid.set_point_weight_scale(Vector2i(i, j), 1.5)
 	if len(enemies) == 0:
 		_on_player_win()
 		return
@@ -162,10 +168,10 @@ func take_enemy_turn():
 		clear_dead()
 		is_player_turn = true
 		return
-	for entity in enemies:
-		grid.set_point_solid(entity.board_position)
-	for rock in rocks:
-		grid.set_point_solid(rock.board_position)
+	#for entity in enemies:
+		#grid.set_point_solid(entity.board_position)
+	#for rock in rocks:
+		#grid.set_point_solid(rock.board_position)
 	var tween = create_tween()
 	remove_target_highlights(player.board_position)
 	var enemy = enemies[enemy_idx]
@@ -179,23 +185,34 @@ func take_enemy_turn():
 			dest = move_patterns.shift_chase(enemy, player.board_position)
 		"archer":
 			dest = move_patterns.shift_chase_axis(enemy, player.board_position)
-			
+	var next
 	if len(dest) > 0:
-		for j in range(len(dest)):
-			var move_success = move(enemy, dest[j], tween)
-			if move_success:
-				await tween.finished
-				break
-	var attack_target = enemy.find_targets(player)
+		var target = dest[1]
+		next = dest[1]
+		for j in range(1, enemy.speed + 1):
+			var current = dest[j]
+			if board[current[0]][current[1]] == null:
+				target = current
+				if j < len(dest) - 1:
+					next = dest[j + 1]
+		var move_success = move(enemy, target, tween)
+		if move_success:
+			await tween.finished
+	var attack_target
+	match enemy.type:
+		"warrior":
+			attack_target = enemy.find_targets(next)
+		"archer":
+			attack_target = enemy.find_targets(player)
 	var did_attack = false
 	if attack_target != null:
 		attack(enemy, attack_target, tween)
 		await anim_player.animation_finished
 		did_attack = true
-	for entity in enemies:
-		grid.set_point_solid(entity.board_position, false)
-	for rock in rocks:
-		grid.set_point_solid(rock.board_position, false)
+	#for entity in enemies:
+		#grid.set_point_solid(entity.board_position, false)
+	#for rock in rocks:
+		#grid.set_point_solid(rock.board_position, false)
 	take_enemy_turn()
 	
 func clear_dead():

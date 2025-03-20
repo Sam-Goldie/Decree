@@ -16,7 +16,7 @@ func _ready():
 	var hp_display = str(hp)
 	$Path2D/PathFollow2D/Sprite2D/Label.text = hp_display
 
-func find_targets(player):
+func find_targets(next_move):
 	var target = board_position
 	var attack_axis
 	if board_position[0] != player.board_position[0] and board_position[1] != player.board_position[1]:
