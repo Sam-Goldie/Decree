@@ -1,6 +1,7 @@
 class_name MovePatterns
 
 var grid : AStarGrid2D
+var board
 
 func get_board_position(position : Vector2):
 	var int_position = Vector2i(floori(position[0]), floori(position[1]))
@@ -47,3 +48,8 @@ func shift_chase_axis(entity, target):
 			path = current_path
 			#path_distance = current_distance
 	return path
+
+func charge(entity, target):
+	if entity.board_position[0] != target[0] and entity.board_position[1] != target[1]:
+		return []
+	return grid.get_id_path(entity.board_position, target)
