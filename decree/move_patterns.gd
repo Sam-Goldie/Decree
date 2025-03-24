@@ -1,6 +1,7 @@
 class_name MovePatterns
 
 var grid : AStarGrid2D
+var board
 
 func get_board_position(position : Vector2):
 	var int_position = Vector2i(floori(position[0]), floori(position[1]))
@@ -11,11 +12,10 @@ func get_distance(board_pos1 : Vector2i, board_pos2 : Vector2i):
 	var total_distance = board_pos1 - board_pos2
 	return abs(total_distance[0]) + abs(total_distance[1])
 
-# problem is, I need to not include deeper path elements because I reverse, but I need them to choose my attack later
 func shift_chase(entity, target):
 	if grid.is_dirty():
 		grid.update()
-	var path = grid.get_id_path(entity.board_position, target, true)
+	var path = grid.get_id_path(entity.board_position, target, false)
 	return path
 
 func shift_target(entity, target):
@@ -34,16 +34,21 @@ func shift_chase_axis(entity, target):
 	var target_y = target[1]
 	if entity.board_position[0] == target_x or entity.board_position[1] == target_y:
 		return path
-	for i in range(Globals.BOARD_SIZE[0]):
+	for i in range(Globals.BOARD_SIZE[1]):
 		var current_path = grid.get_id_path(entity.board_position, Vector2i(target_x, i), false)
 		#var current_distance = get_distance(entity.board_position, Vector2i(target_x, i))
 		if len(path) == 0 or (len(current_path) > 0 and len(current_path) < len(path)):
 			path = current_path
 			#path_distance = current_distance
-	for i in range(Globals.BOARD_SIZE[1]):
+	for i in range(Globals.BOARD_SIZE[0]):
 		var current_path = grid.get_id_path(entity.board_position, Vector2i(i, target_y), false)
 		#var current_distance = get_distance(entity.board_position, Vector2i(i, target_y))
 		if len(path) == 0 or (len(current_path) > 0 and len(current_path) < len(path)):
 			path = current_path
 			#path_distance = current_distance
 	return path
+
+func charge(entity, target):
+	if entity.board_position[0] != target[0] and entity.board_position[1] != target[1]:
+		return []
+	return grid.get_id_path(entity.board_position, target)
