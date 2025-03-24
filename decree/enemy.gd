@@ -15,6 +15,20 @@ var type
 func _ready():
 	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)
 
+func initialize(board_position, hp, damage, has_moved, board, speed, range, is_enemy, enemies, player, type):
+	self.board_position = board_position
+	self.hp = hp
+	self.damage = damage
+	self.has_moved = has_moved
+	self.board = board
+	self.speed = speed
+	self.range = range
+	self.is_enemy = is_enemy
+	self.enemies = enemies
+	self.player = player
+	self.type = type
+	
+
 func find_targets(next_dest):
 	if next_dest == null:
 		return null

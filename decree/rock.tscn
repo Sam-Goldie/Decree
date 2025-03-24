@@ -15,6 +15,7 @@ curve = SubResource("Curve2D_463vn")
 [node name="PathFollow2D" type="PathFollow2D" parent="Path2D"]
 
 [node name="Sprite2D" type="Sprite2D" parent="Path2D/PathFollow2D"]
+z_index = 1
 texture = ExtResource("2_077ni")
 offset = Vector2(8, 8)
 region_enabled = true

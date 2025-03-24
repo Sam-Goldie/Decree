@@ -80,17 +80,12 @@ func _ready():
 		tile.get_node("TileSelector").self_modulate.a = 0
 		tile.get_node("BlinkSquare").self_modulate.a = 0
 		tile.connect("click", _on_tile_click.bind(tile))
-		#tile.get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
 		terrain_layer.add_child(tile)
 		terrain[x][y] = tile
 		var rock = rock_scene.instantiate()
-		rock.board_position = Vector2i(x,y)
+		rock.initialize(Vector2i(x, y), 3, false, "rock", grid)
 		rock.position = Vector2i(x * 16, y * 16)
-		rock.hp = 2
-		rock.grid = grid
-		rock.type = "rock"
 		rock.connect("destroy_rock", destroy_rock.bind(x, y))
-		rock.is_enemy = false
 		board[x][y] = rock 
 		navigation_layer.add_child(rock)
 		rocks.append(rock)
@@ -108,35 +103,17 @@ func _ready():
 			terrain_layer.add_child(tile)
 	for i in range(bull_count):
 		var bull = bull_scene.instantiate()
-		bull.grid = grid
-		bull.type = "bull"
-		bull.hp = 5
-		bull.damage = 2
-		bull.range = 100
-		bull.speed = 100
-		bull.board = board
-		bull.enemies = enemies
-		bull.player = player
-		bull.board_position = Vector2i(-1,-1)
-		bull.is_enemy = true
+		var board_position = Vector2i(-1,-1)
+		while board_position == Vector2i(-1,-1) or board[board_position[0]][board_position[1]] != null:
+			board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
+		bull.initialize(board_position, 5, 2, false, board, 100, 1, true, enemies, player, "bull", grid)
 		enemies.append(bull)
-		while bull.board_position == Vector2i(-1,-1) or board[bull.board_position[0]][bull.board_position[1]] != null:
-			bull.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
 		bull.position = bull.board_position * 16
 		board[bull.board_position[0]][bull.board_position[1]] = bull
 		navigation_layer.add_child(bull)
 	for i in range(warrior_count):
 		var warrior = enemy_scene.instantiate()
-		warrior.type = "warrior"
-		warrior.hp = 3
-		warrior.damage = 1
-		warrior.range = 1
-		warrior.speed = 1
-		warrior.board = board
-		warrior.enemies = enemies
-		warrior.player = player
-		warrior.board_position = Vector2i(-1,-1)
-		warrior.is_enemy = true
+		warrior.initialize(Vector2i(-1,-1), 3, 1, false, board, 1, 1, true, enemies, player, "warrior")
 		enemies.append(warrior)
 		while warrior.board_position == Vector2i(-1,-1) or board[warrior.board_position[0]][warrior.board_position[1]] != null:
 			warrior.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
@@ -145,19 +122,11 @@ func _ready():
 		navigation_layer.add_child(warrior)
 	for i in range(archer_count):
 		var archer = archer_scene.instantiate()
-		archer.type = "archer"
-		archer.hp = 3
-		archer.damage = 1
-		archer.range = 100
-		archer.speed = 1
-		archer.board = board
-		archer.enemies = enemies
-		archer.player = player
-		archer.board_position = Vector2i(-1,-1)
-		archer.is_enemy = true
+		var board_position = Vector2i(-1,-1)
+		while board_position == Vector2i(-1,-1) or board[board_position[0]][board_position[1]] != null:
+			board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
+		archer.initialize(board_position, 3, 1, false, board, 1, 100, true, enemies, player, "archer")
 		enemies.append(archer)
-		while archer.board_position == Vector2i(-1,-1) or board[archer.board_position[0]][archer.board_position[1]] != null:
-			archer.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
 		archer.position = archer.board_position * 16
 		board[archer.board_position[0]][archer.board_position[1]] = archer
 		navigation_layer.add_child(archer)
@@ -458,6 +427,8 @@ func push(entity, offset, distance):
 	var tween = create_tween()
 	for i in range(distance):
 		var dest = entity.board_position + offset
-		if board[dest[0]][dest[1]] != null:
+		if is_valid_position(dest) and board[dest[0]][dest[1]] != null:
 			break
 		move(entity, entity.board_position + offset, tween)
+#
+#func generate_entities(scene, count):
