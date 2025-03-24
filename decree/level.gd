@@ -80,7 +80,7 @@ func _ready():
 		tile.get_node("TileSelector").self_modulate.a = 0
 		tile.get_node("BlinkSquare").self_modulate.a = 0
 		tile.connect("click", _on_tile_click.bind(tile))
-		tile.get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
+		#tile.get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
 		terrain_layer.add_child(tile)
 		terrain[x][y] = tile
 		var rock = rock_scene.instantiate()
@@ -301,7 +301,8 @@ func move(entity, target, tween):
 		board[prev_position[0]][prev_position[1]] = null
 		board[target[0]][target[1]] = entity
 		entity.board_position = target
-		entity.has_moved = true
+		if entity.is_enemy or entity == player:
+			entity.has_moved = true
 		did_move = true
 	if entity == player:
 		player.prev_board_position = prev_position
@@ -354,9 +355,18 @@ func _on_tile_click(tile):
 		#for entity in enemies:
 			#grid.set_point_solid(entity.board_position)
 	elif player.has_moved:
-		attack(player, tile, tween)
-		if player.has_moved:
-			return
+		var offset
+		if player.board_position[0] < tile.board_position[0]:
+			offset = Vector2i(1,0)
+		elif player.board_position[0] > tile.board_position[0]:
+			offset = Vector2i(-1,0)
+		elif player.board_position[1] < tile.board_position[1]:
+			offset = Vector2i(0,1)
+		else:
+			offset = Vector2i(0,-1)
+		var target_entity = board[tile.board_position[0]][tile.board_position[1]]
+		if target_entity != null:
+			push(board[tile.board_position[0]][tile.board_position[1]], offset, 2)
 		var anim_player = player.get_node("AnimationPlayer")
 		if anim_player.is_playing():
 			await anim_player.animation_finished
@@ -443,3 +453,11 @@ func clear_grid():
 	for i in range(Globals.BOARD_SIZE[0]):
 		for j in range(Globals.BOARD_SIZE[1]):
 			grid.set_point_solid(Vector2i(i,j), false)
+
+func push(entity, offset, distance):
+	var tween = create_tween()
+	for i in range(distance):
+		var dest = entity.board_position + offset
+		if board[dest[0]][dest[1]] != null:
+			break
+		move(entity, entity.board_position + offset, tween)

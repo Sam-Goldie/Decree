@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://bl8kl8d2h8vdm"]
+[gd_scene load_steps=5 format=3 uid="uid://bl8kl8d2h8vdm"]
 
 [ext_resource type="Script" path="res://rock.gd" id="1_28osk"]
 [ext_resource type="PackedScene" uid="uid://c4fwmdh8clkco" path="res://health_display.tscn" id="2_50nx6"]
+[ext_resource type="Texture2D" uid="uid://di6y38yu85dr2" path="res://4_Seasons_Ground_Tiles.png" id="2_077ni"]
 
 [sub_resource type="Curve2D" id="Curve2D_463vn"]
 
@@ -14,5 +15,9 @@ curve = SubResource("Curve2D_463vn")
 [node name="PathFollow2D" type="PathFollow2D" parent="Path2D"]
 
 [node name="Sprite2D" type="Sprite2D" parent="Path2D/PathFollow2D"]
+texture = ExtResource("2_077ni")
+offset = Vector2(8, 8)
+region_enabled = true
+region_rect = Rect2(96, 32, 16, 16)
 
 [node name="HealthDisplay" parent="Path2D/PathFollow2D/Sprite2D" instance=ExtResource("2_50nx6")]
