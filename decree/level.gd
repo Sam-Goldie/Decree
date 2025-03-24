@@ -19,7 +19,7 @@ var is_player_turn = true
 @onready
 var warrior_count = 3
 @onready
-var archer_count = 2
+var archer_count = 1
 @onready
 var bull_count = 1
 @onready
@@ -29,7 +29,7 @@ var enemy_idx = 0
 @onready
 var terrain = []
 @onready
-var rock_count = 22
+var rock_count = 11
 @onready
 var rocks = []
 @onready
@@ -106,6 +106,25 @@ func _ready():
 			tile.connect("click", _on_tile_click.bind(tile))
 			terrain[i][j] = tile
 			terrain_layer.add_child(tile)
+	for i in range(bull_count):
+		var bull = bull_scene.instantiate()
+		bull.grid = grid
+		bull.type = "bull"
+		bull.hp = 5
+		bull.damage = 2
+		bull.range = 100
+		bull.speed = 100
+		bull.board = board
+		bull.enemies = enemies
+		bull.player = player
+		bull.board_position = Vector2i(-1,-1)
+		bull.is_enemy = true
+		enemies.append(bull)
+		while bull.board_position == Vector2i(-1,-1) or board[bull.board_position[0]][bull.board_position[1]] != null:
+			bull.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
+		bull.position = bull.board_position * 16
+		board[bull.board_position[0]][bull.board_position[1]] = bull
+		navigation_layer.add_child(bull)
 	for i in range(warrior_count):
 		var warrior = enemy_scene.instantiate()
 		warrior.type = "warrior"
@@ -142,25 +161,6 @@ func _ready():
 		archer.position = archer.board_position * 16
 		board[archer.board_position[0]][archer.board_position[1]] = archer
 		navigation_layer.add_child(archer)
-	for i in range(bull_count):
-		var bull = bull_scene.instantiate()
-		bull.grid = grid
-		bull.type = "bull"
-		bull.hp = 5
-		bull.damage = 2
-		bull.range = 100
-		bull.speed = 100
-		bull.board = board
-		bull.enemies = enemies
-		bull.player = player
-		bull.board_position = Vector2i(-1,-1)
-		bull.is_enemy = true
-		enemies.append(bull)
-		while bull.board_position == Vector2i(-1,-1) or board[bull.board_position[0]][bull.board_position[1]] != null:
-			bull.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
-		bull.position = bull.board_position * 16
-		board[bull.board_position[0]][bull.board_position[1]] = bull
-		navigation_layer.add_child(bull)
 	grid.update()
 
 func _process(_delta):
@@ -189,12 +189,7 @@ func is_in_range(position1, position2, range):
 		return false 
 
 func take_enemy_turn():
-	for i in range(Globals.BOARD_SIZE[0]):
-		for j in range(Globals.BOARD_SIZE[1]):
-			if board[i][j] == null:
-				grid.set_point_weight_scale(Vector2i(i, j), 1)
-			else:
-				grid.set_point_weight_scale(Vector2i(i, j), 1.5)
+	solidify_grid()
 	if len(enemies) == 0:
 		_on_player_win()
 		return
@@ -213,15 +208,24 @@ func take_enemy_turn():
 	var anim_player = enemy.get_node("AnimationPlayer")
 	enemy_idx += 1
 	if enemy == null:
+		clear_grid()
 		take_enemy_turn()
-	var dest
+		return
+	var dest = []
 	match enemy.type:
 		"warrior":
 			dest = move_patterns.shift_chase(enemy, player.board_position)
 		"archer":
 			dest = move_patterns.shift_chase_axis(enemy, player.board_position)
-		"bull":
-			dest = move_patterns.charge(enemy, player.board_position)
+	clear_grid()
+	if len(dest) == 0 or enemy.type == "bull":
+		match enemy.type:
+			"warrior":
+				dest = move_patterns.shift_chase(enemy, player.board_position)
+			"archer":
+				dest = move_patterns.shift_chase_axis(enemy, player.board_position)
+			"bull":
+				dest = move_patterns.charge(enemy, player.board_position)
 	var next
 	if len(dest) > 0:
 		var target = dest[0]
@@ -234,7 +238,7 @@ func take_enemy_turn():
 				if j < len(dest) - 1:
 					next = dest[j + 1]
 			else:
-				if j < len(dest) - 1:
+				if j <= len(dest) - 1:
 					next = current
 				break
 				
@@ -329,6 +333,7 @@ func attack(entity, target, tween):
 					anim_player.play("attack_up")
 
 func _on_tile_click(tile):
+	clear_grid()
 	if !is_player_turn or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
@@ -427,3 +432,14 @@ func hide_turn_order():
 			return
 		else:
 			turn_display.visible = false
+
+func solidify_grid():
+	for i in range(Globals.BOARD_SIZE[0]):
+		for j in range(Globals.BOARD_SIZE[1]):
+			if board[i][j] != null and board[i][j] != player:
+				grid.set_point_solid(Vector2i(i,j))
+
+func clear_grid():
+	for i in range(Globals.BOARD_SIZE[0]):
+		for j in range(Globals.BOARD_SIZE[1]):
+			grid.set_point_solid(Vector2i(i,j), false)

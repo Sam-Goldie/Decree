@@ -11,6 +11,7 @@ func initiate(hp):
 		pips.append(new_pip)
 
 func reduce_health(amount):
+	var pip_count = len(pips)
 	for i in range(amount):
-		pips[len(pips) - 1 - i].queue_free()
-		pips.remove_at(len(pips) - 1 - i)
+		pips[pip_count - 1 - i].free()
+		pips.remove_at(pip_count - 1 - i)
