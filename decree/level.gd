@@ -17,7 +17,7 @@ var player_start = Vector2i(2,2)
 @onready
 var is_player_turn = true
 @onready
-var warrior_count = 3
+var warrior_count = 2
 @onready
 var archer_count = 1
 @onready
@@ -29,7 +29,7 @@ var enemy_idx = 0
 @onready
 var terrain = []
 @onready
-var rock_count = 11
+var rock_count = 5
 @onready
 var rocks = []
 @onready
@@ -39,16 +39,13 @@ var move_patterns = move_pattern_scene.new()
 @onready
 var grid
 
-
 func _ready():
 	$EndScreen.connect("restart", _restart_game)
 	player.connect("lose", _on_player_lose)
-	grid = AStarGrid2D.new()
+	grid = Globals.GRID
 	grid.size = Vector2i(Globals.BOARD_SIZE[0], Globals.BOARD_SIZE[1])
 	grid.cell_size = Vector2(16,16)
 	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
-	move_patterns.grid = grid
-	move_patterns.board = board
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
 	for i in range(Globals.BOARD_SIZE[0]):
@@ -80,17 +77,12 @@ func _ready():
 		tile.get_node("TileSelector").self_modulate.a = 0
 		tile.get_node("BlinkSquare").self_modulate.a = 0
 		tile.connect("click", _on_tile_click.bind(tile))
-		tile.get_node("Sprite2D").texture.region = Rect2(96, 32, 16, 16)
 		terrain_layer.add_child(tile)
 		terrain[x][y] = tile
 		var rock = rock_scene.instantiate()
-		rock.board_position = Vector2i(x,y)
+		rock.initialize(Vector2i(x, y), 2, false, "rock", grid)
 		rock.position = Vector2i(x * 16, y * 16)
-		rock.hp = 2
-		rock.grid = grid
-		rock.type = "rock"
 		rock.connect("destroy_rock", destroy_rock.bind(x, y))
-		rock.is_enemy = false
 		board[x][y] = rock 
 		navigation_layer.add_child(rock)
 		rocks.append(rock)
@@ -108,35 +100,17 @@ func _ready():
 			terrain_layer.add_child(tile)
 	for i in range(bull_count):
 		var bull = bull_scene.instantiate()
-		bull.grid = grid
-		bull.type = "bull"
-		bull.hp = 5
-		bull.damage = 2
-		bull.range = 100
-		bull.speed = 100
-		bull.board = board
-		bull.enemies = enemies
-		bull.player = player
-		bull.board_position = Vector2i(-1,-1)
-		bull.is_enemy = true
+		var board_position = Vector2i(-1,-1)
+		while board_position == Vector2i(-1,-1) or board[board_position[0]][board_position[1]] != null:
+			board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
+		bull.initialize(board_position, 5, 2, false, board, 100, 1, true, enemies, player, "bull", grid)
 		enemies.append(bull)
-		while bull.board_position == Vector2i(-1,-1) or board[bull.board_position[0]][bull.board_position[1]] != null:
-			bull.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
 		bull.position = bull.board_position * 16
 		board[bull.board_position[0]][bull.board_position[1]] = bull
 		navigation_layer.add_child(bull)
 	for i in range(warrior_count):
 		var warrior = enemy_scene.instantiate()
-		warrior.type = "warrior"
-		warrior.hp = 3
-		warrior.damage = 1
-		warrior.range = 1
-		warrior.speed = 1
-		warrior.board = board
-		warrior.enemies = enemies
-		warrior.player = player
-		warrior.board_position = Vector2i(-1,-1)
-		warrior.is_enemy = true
+		warrior.initialize(Vector2i(-1,-1), 3, 1, false, board, 1, 1, true, enemies, player, "warrior")
 		enemies.append(warrior)
 		while warrior.board_position == Vector2i(-1,-1) or board[warrior.board_position[0]][warrior.board_position[1]] != null:
 			warrior.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
@@ -145,19 +119,11 @@ func _ready():
 		navigation_layer.add_child(warrior)
 	for i in range(archer_count):
 		var archer = archer_scene.instantiate()
-		archer.type = "archer"
-		archer.hp = 3
-		archer.damage = 1
-		archer.range = 100
-		archer.speed = 1
-		archer.board = board
-		archer.enemies = enemies
-		archer.player = player
-		archer.board_position = Vector2i(-1,-1)
-		archer.is_enemy = true
+		var board_position = Vector2i(-1,-1)
+		while board_position == Vector2i(-1,-1) or board[board_position[0]][board_position[1]] != null:
+			board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
+		archer.initialize(board_position, 3, 1, false, board, 1, 100, true, enemies, player, "archer")
 		enemies.append(archer)
-		while archer.board_position == Vector2i(-1,-1) or board[archer.board_position[0]][archer.board_position[1]] != null:
-			archer.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
 		archer.position = archer.board_position * 16
 		board[archer.board_position[0]][archer.board_position[1]] = archer
 		navigation_layer.add_child(archer)
@@ -198,10 +164,6 @@ func take_enemy_turn():
 		clear_dead()
 		is_player_turn = true
 		return
-	#for entity in enemies:
-		#grid.set_point_solid(entity.board_position)
-	#for rock in rocks:
-		#grid.set_point_solid(rock.board_position)
 	var tween = create_tween()
 	remove_target_highlights(player.board_position)
 	var enemy = enemies[enemy_idx]
@@ -242,9 +204,7 @@ func take_enemy_turn():
 					next = current
 				break
 				
-		var move_success = move(enemy, target, tween)
-		if move_success:
-			await tween.finished
+		var move_success = await move(enemy, target, tween)
 	var attack_target
 	match enemy.type:
 		"warrior":
@@ -258,10 +218,6 @@ func take_enemy_turn():
 		attack(enemy, attack_target, tween)
 		await anim_player.animation_finished
 		did_attack = true
-	#for entity in enemies:
-		#grid.set_point_solid(entity.board_position, false)
-	#for rock in rocks:
-		#grid.set_point_solid(rock.board_position, false)
 	take_enemy_turn()
 	
 func clear_dead():
@@ -301,8 +257,11 @@ func move(entity, target, tween):
 		board[prev_position[0]][prev_position[1]] = null
 		board[target[0]][target[1]] = entity
 		entity.board_position = target
-		entity.has_moved = true
+		if entity.is_enemy or entity == player:
+			entity.has_moved = true
 		did_move = true
+		if tween.is_running:
+			await tween.finished
 	if entity == player:
 		player.prev_board_position = prev_position
 	if did_move:
@@ -316,55 +275,52 @@ func attack(entity, target, tween):
 		return
 	player.has_moved = false
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
-		#await get_tree().create_timer(1.5).timeout
 		damage(board[target_pos[0]][target_pos[1]], entity.damage)
 		var anim_player = entity.get_node("AnimationPlayer")
 		if anim_player != null:
-			var offset = entity_pos - target_pos
-			if abs(offset[0]) > abs(offset[1]):
-				if offset[0] < 0:
-					anim_player.play("attack_right")
-				else:
-					anim_player.play("attack_left")
-			else:
-				if offset[1] < 0:
-					anim_player.play("attack_down")
-				else:
-					anim_player.play("attack_up")
+			await animate_attack(entity.board_position, target.board_position, anim_player)
+
+func animate_attack(entity_pos, target_pos, anim_player):
+	var offset = entity_pos - target_pos
+	if abs(offset[0]) > abs(offset[1]):
+		if offset[0] < 0:
+			anim_player.play("attack_right")
+		else:
+			anim_player.play("attack_left")
+	else:
+		if offset[1] < 0:
+			anim_player.play("attack_down")
+		else:
+			anim_player.play("attack_up")
+	await anim_player.animation_finished
 
 func _on_tile_click(tile):
 	clear_grid()
 	if !is_player_turn or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
-	#for rock in rocks:
-		#grid.set_point_solid(rock.board_position)
-	#for entity in enemies:
-		#grid.set_point_solid(entity.board_position)
 	if !player.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null and !grid.is_point_solid(tile.board_position):
 		if is_in_range(player.board_position, tile.board_position, player.speed):
 			var dest = move_patterns.shift_target(player, tile.board_position)
 			if dest != null:
-				var did_move = move(player, tile.board_position, tween)
+				var did_move = await move(player, tile.board_position, tween)
 				if did_move:
 					highlight_targets(player.board_position)
-					await tween.finished
-		#for rock in rocks:
-			#grid.set_point_solid(rock.board_position, false)
-		#for entity in enemies:
-			#grid.set_point_solid(entity.board_position)
 	elif player.has_moved:
-		attack(player, tile, tween)
-		if player.has_moved:
-			return
+		var offset
+		if player.board_position[0] < tile.board_position[0]:
+			offset = Vector2i(1,0)
+		elif player.board_position[0] > tile.board_position[0]:
+			offset = Vector2i(-1,0)
+		elif player.board_position[1] < tile.board_position[1]:
+			offset = Vector2i(0,1)
+		else:
+			offset = Vector2i(0,-1)
+		var target_entity = board[tile.board_position[0]][tile.board_position[1]]
+		if target_entity != null:
+			await push(board[tile.board_position[0]][tile.board_position[1]], offset, 2)
 		var anim_player = player.get_node("AnimationPlayer")
-		if anim_player.is_playing():
-			await anim_player.animation_finished
 		player.has_moved = false
-		#for rock in rocks:
-			#grid.set_point_solid(rock.board_position, false)
-		#for entity in enemies:
-			#grid.set_point_solid(entity.board_position)
 		take_enemy_turn()
 
 func _on_tile_right_click():
@@ -395,7 +351,7 @@ func remove_highlight_tile(board_position):
 	terrain[board_position[0]][board_position[1]].get_node("BlinkSquare").self_modulate.a = 0
 
 func revert_move(tween):
-	move(player, player.prev_board_position, tween)
+	await move(player, player.prev_board_position, tween)
 	player.has_moved = false
 
 func destroy_rock(x, y):
@@ -443,3 +399,10 @@ func clear_grid():
 	for i in range(Globals.BOARD_SIZE[0]):
 		for j in range(Globals.BOARD_SIZE[1]):
 			grid.set_point_solid(Vector2i(i,j), false)
+
+func push(entity, offset, distance):
+	for i in range(distance):
+		var dest = entity.board_position + offset
+		if is_valid_position(dest) and board[dest[0]][dest[1]] != null:
+			break
+		await move(entity, dest, create_tween())

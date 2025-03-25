@@ -3,6 +3,10 @@ class_name MovePatterns
 var grid : AStarGrid2D
 var board
 
+func _init():
+	grid = Globals.GRID
+	board = Globals.BOARD
+
 func get_board_position(position : Vector2):
 	var int_position = Vector2i(floori(position[0]), floori(position[1]))
 	var snapped_position = (int_position - (int_position % Vector2i(16,16))) / 16
