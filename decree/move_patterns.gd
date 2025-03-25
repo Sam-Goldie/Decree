@@ -17,10 +17,16 @@ func get_distance(board_pos1 : Vector2i, board_pos2 : Vector2i):
 	return abs(total_distance[0]) + abs(total_distance[1])
 
 func shift_chase(entity, target):
-	if grid.is_dirty():
-		grid.update()
-	var path = grid.get_id_path(entity.board_position, target, false)
-	return path
+	var dest
+	var offset = entity.board_position - target
+	if offset[0] < 0:
+		return entity.board_position + Vector2i(1,0)
+	elif offset[0] > 0:
+		return entity.board_position + Vector2i(-1,0)
+	elif offset[1] < 0:
+		return entity.board_position + Vector2i(0,1)
+	else:
+		return entity.board_position + Vector2i(0,-1)
 
 func shift_target(entity, target):
 	if grid.is_dirty():

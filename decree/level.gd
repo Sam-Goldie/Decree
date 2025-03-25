@@ -19,9 +19,9 @@ var is_player_turn = true
 @onready
 var warrior_count = 2
 @onready
-var archer_count = 1
+var archer_count = 0
 @onready
-var bull_count = 1
+var bull_count = 0
 @onready
 var enemies = []
 @onready
@@ -173,51 +173,45 @@ func take_enemy_turn():
 		clear_grid()
 		take_enemy_turn()
 		return
-	var dest = []
+	var dest
 	match enemy.type:
 		"warrior":
 			dest = move_patterns.shift_chase(enemy, player.board_position)
 		"archer":
 			dest = move_patterns.shift_chase_axis(enemy, player.board_position)
-	clear_grid()
-	if len(dest) == 0 or enemy.type == "bull":
-		match enemy.type:
-			"warrior":
-				dest = move_patterns.shift_chase(enemy, player.board_position)
-			"archer":
-				dest = move_patterns.shift_chase_axis(enemy, player.board_position)
-			"bull":
-				dest = move_patterns.charge(enemy, player.board_position)
-	var next
-	if len(dest) > 0:
-		var target = dest[0]
-		for j in range(1, enemy.speed + 1):
-			if j > len(dest) - 1:
-				break
-			var current = dest[j]
-			if board[current[0]][current[1]] == null:
-				target = current
-				if j < len(dest) - 1:
-					next = dest[j + 1]
-			else:
-				if j <= len(dest) - 1:
-					next = current
-				break
-				
-		var move_success = await move(enemy, target, tween)
-	var attack_target
-	match enemy.type:
-		"warrior":
-			attack_target = enemy.find_targets(next)
-		"archer":
-			attack_target = enemy.find_targets(player)
 		"bull":
-			attack_target = enemy.find_targets(player)
-	var did_attack = false
-	if attack_target != null:
-		attack(enemy, attack_target, tween)
-		await anim_player.animation_finished
-		did_attack = true
+			dest = move_patterns.charge(enemy, player.board_position)
+	if dest != null and dest != enemy.board_position and board[dest[0]][dest[1]] != null:
+		attack(enemy, board[dest[0]][dest[1]], create_tween())
+	elif dest != null and dest != enemy.board_position:
+		await move(enemy, dest, create_tween())
+		#var target = dest[0]
+		#for j in range(1, enemy.speed + 1):
+			#if j > len(dest) - 1:
+				#break
+			#var current = dest[j]
+			#if board[current[0]][current[1]] == null:
+				#target = current
+				#if j < len(dest) - 1:
+					#next = dest[j + 1]
+			#else:
+				#if j <= len(dest) - 1:
+					#next = current
+				#break
+				
+	#var attack_target
+	#match enemy.type:
+		#"warrior":
+			#attack_target = enemy.find_targets(next)
+		#"archer":
+			#attack_target = enemy.find_targets(player)
+		#"bull":
+			#attack_target = enemy.find_targets(player)
+	#var did_attack = false
+	#if attack_target != null:
+		#attack(enemy, attack_target, tween)
+		#await anim_player.animation_finished
+		#did_attack = true
 	take_enemy_turn()
 	
 func clear_dead():
