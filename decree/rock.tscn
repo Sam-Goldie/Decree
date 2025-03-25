@@ -7,6 +7,7 @@
 [sub_resource type="Curve2D" id="Curve2D_463vn"]
 
 [node name="Rock" type="Node2D"]
+z_index = -1
 script = ExtResource("1_28osk")
 
 [node name="Path2D" type="Path2D" parent="."]
