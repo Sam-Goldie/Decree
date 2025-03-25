@@ -19,9 +19,9 @@ var is_player_turn = true
 @onready
 var warrior_count = 2
 @onready
-var archer_count = 0
+var archer_count = 1
 @onready
-var bull_count = 0
+var bull_count = 1
 @onready
 var enemies = []
 @onready
@@ -39,16 +39,13 @@ var move_patterns = move_pattern_scene.new()
 @onready
 var grid
 
-
 func _ready():
 	$EndScreen.connect("restart", _restart_game)
 	player.connect("lose", _on_player_lose)
-	grid = AStarGrid2D.new()
+	grid = Globals.GRID
 	grid.size = Vector2i(Globals.BOARD_SIZE[0], Globals.BOARD_SIZE[1])
 	grid.cell_size = Vector2(16,16)
 	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
-	move_patterns.grid = grid
-	move_patterns.board = board
 	var terrain_layer = $Terrain
 	var navigation_layer = $Navigation
 	for i in range(Globals.BOARD_SIZE[0]):
@@ -167,10 +164,6 @@ func take_enemy_turn():
 		clear_dead()
 		is_player_turn = true
 		return
-	#for entity in enemies:
-		#grid.set_point_solid(entity.board_position)
-	#for rock in rocks:
-		#grid.set_point_solid(rock.board_position)
 	var tween = create_tween()
 	remove_target_highlights(player.board_position)
 	var enemy = enemies[enemy_idx]
@@ -225,10 +218,6 @@ func take_enemy_turn():
 		attack(enemy, attack_target, tween)
 		await anim_player.animation_finished
 		did_attack = true
-	#for entity in enemies:
-		#grid.set_point_solid(entity.board_position, false)
-	#for rock in rocks:
-		#grid.set_point_solid(rock.board_position, false)
 	take_enemy_turn()
 	
 func clear_dead():
@@ -286,7 +275,6 @@ func attack(entity, target, tween):
 		return
 	player.has_moved = false
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
-		#await get_tree().create_timer(1.5).timeout
 		damage(board[target_pos[0]][target_pos[1]], entity.damage)
 		var anim_player = entity.get_node("AnimationPlayer")
 		if anim_player != null:
@@ -311,10 +299,6 @@ func _on_tile_click(tile):
 	if !is_player_turn or player.board_position == tile.board_position:
 		return
 	var tween = create_tween()
-	#for rock in rocks:
-		#grid.set_point_solid(rock.board_position)
-	#for entity in enemies:
-		#grid.set_point_solid(entity.board_position)
 	if !player.has_moved and board[tile.board_position[0]][tile.board_position[1]] == null and !grid.is_point_solid(tile.board_position):
 		if is_in_range(player.board_position, tile.board_position, player.speed):
 			var dest = move_patterns.shift_target(player, tile.board_position)
@@ -322,10 +306,6 @@ func _on_tile_click(tile):
 				var did_move = await move(player, tile.board_position, tween)
 				if did_move:
 					highlight_targets(player.board_position)
-		#for rock in rocks:
-			#grid.set_point_solid(rock.board_position, false)
-		#for entity in enemies:
-			#grid.set_point_solid(entity.board_position)
 	elif player.has_moved:
 		var offset
 		if player.board_position[0] < tile.board_position[0]:
@@ -341,10 +321,6 @@ func _on_tile_click(tile):
 			await push(board[tile.board_position[0]][tile.board_position[1]], offset, 2)
 		var anim_player = player.get_node("AnimationPlayer")
 		player.has_moved = false
-		#for rock in rocks:
-			#grid.set_point_solid(rock.board_position, false)
-		#for entity in enemies:
-			#grid.set_point_solid(entity.board_position)
 		take_enemy_turn()
 
 func _on_tile_right_click():
@@ -386,9 +362,8 @@ func _on_player_lose():
 	$EndScreen.visible = true
 	
 func _on_player_win():
-	return
-	#$EndScreen/TextEdit.text = "YOU WIN YOU WIN YOU WIN"
-	#$EndScreen.visible = true
+	$EndScreen/TextEdit.text = "YOU WIN YOU WIN YOU WIN"
+	$EndScreen.visible = true
 	
 func _restart_game():
 	get_tree().reload_current_scene()
@@ -426,11 +401,8 @@ func clear_grid():
 			grid.set_point_solid(Vector2i(i,j), false)
 
 func push(entity, offset, distance):
-	#var tween = create_tween()
 	for i in range(distance):
 		var dest = entity.board_position + offset
 		if is_valid_position(dest) and board[dest[0]][dest[1]] != null:
 			break
 		await move(entity, dest, create_tween())
-#
-#func generate_entities(scene, count):

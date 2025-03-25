@@ -22,4 +22,4 @@ Globals="*res://globals.gd"
 [display]
 
 window/stretch/mode="canvas_items"
-window/stretch/scale=8.0
+window/stretch/scale=7.0
