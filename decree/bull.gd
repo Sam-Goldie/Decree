@@ -30,12 +30,19 @@ func initialize(board_position, hp, damage, has_moved, board, speed, range, is_e
 	self.type = type
 	self.grid = grid
 
-func find_targets(target):
-	if board_position[0] != target.board_position[0] and board_position[1] != target.board_position[1]:
+func find_targets():
+	var x = board_position[0]
+	var y = board_position[1]
+	if x != player.board_position[0] and y != player.board_position[1]:
 		return null
-	var path = grid.get_id_path(board_position, target.board_position)
-	if board[path[1][0]][path[1][1]] != null:
-		return board[path[1][0]][path[1][1]]
+	if x < player.board_position[0]:
+		return board[x+1][y]
+	elif x > player.board_position[0]:
+		return board[x-1][y]
+	elif y < player.board_position[1]:
+		return board[x][y+1]
+	else:
+		return board[x][y-1]
 
 func destroy():
 	self.queue_free()

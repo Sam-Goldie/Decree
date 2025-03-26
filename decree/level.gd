@@ -21,7 +21,7 @@ var warrior_count = 2
 @onready
 var archer_count = 0
 @onready
-var bull_count = 0
+var bull_count = 1
 @onready
 var enemies = []
 @onready
@@ -33,7 +33,7 @@ var rock_count = 5
 @onready
 var rocks = []
 @onready
-var board = []
+var board
 @onready
 var move_patterns = move_pattern_scene.new()
 @onready
@@ -42,6 +42,7 @@ var grid
 func _ready():
 	$EndScreen.connect("restart", _restart_game)
 	player.connect("lose", _on_player_lose)
+	board = Globals.BOARD
 	grid = Globals.GRID
 	grid.size = Vector2i(Globals.BOARD_SIZE[0], Globals.BOARD_SIZE[1])
 	grid.cell_size = Vector2(16,16)
@@ -183,8 +184,15 @@ func take_enemy_turn():
 			dest = move_patterns.charge(enemy, player.board_position)
 	if dest != null and dest != enemy.board_position and board[dest[0]][dest[1]] != null:
 		attack(enemy, board[dest[0]][dest[1]], create_tween())
-	elif dest != null and dest != enemy.board_position:
+	elif dest == enemy.board_position:
+		var target = enemy.find_targets()
+		if target != null:
+			attack(enemy, target, create_tween())
+	else:
 		await move(enemy, dest, create_tween())
+		var target = enemy.find_targets()
+		if target != null:
+			attack(enemy, target, create_tween())
 		#var target = dest[0]
 		#for j in range(1, enemy.speed + 1):
 			#if j > len(dest) - 1:

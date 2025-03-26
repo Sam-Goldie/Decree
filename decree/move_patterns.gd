@@ -59,6 +59,26 @@ func shift_chase_axis(entity, target):
 	return path
 
 func charge(entity, target):
-	if entity.board_position[0] != target[0] and entity.board_position[1] != target[1]:
-		return []
-	return grid.get_id_path(entity.board_position, target)
+	var dest = entity.board_position
+	if dest[0] != target[0] and dest[1] != target[1]:
+		return dest
+	while dest[0] < target[0]:
+		if board[dest[0] + 1][dest[1]] == null:
+			dest[0] += 1
+		else:
+			return dest
+	while dest[0] > target[0]:
+		if board[dest[0] - 1][dest[1]] == null:
+			dest[0] -= 1
+		else:
+			return dest
+	while dest[1] < target[1]:
+		if board[dest[0]][dest[1] + 1] == null:
+			dest[1] += 1
+		else:
+			return dest
+	while dest[1] > target[1]:
+		if board[dest[0]][dest[1] - 1] == null:
+			dest[1] -= 1
+		else:
+			return dest	
