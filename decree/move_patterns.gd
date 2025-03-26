@@ -6,6 +6,12 @@ var board
 func _init():
 	grid = Globals.GRID
 	board = Globals.BOARD
+	
+func is_valid_position(board_position):
+	if board_position[0] < 0 or board_position[0] > Globals.BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > Globals.BOARD_SIZE[1] - 1:
+		return false
+	else:
+		return true
 
 func get_board_position(position : Vector2):
 	var int_position = Vector2i(floori(position[0]), floori(position[1]))
@@ -60,25 +66,21 @@ func shift_chase_axis(entity, target):
 
 func charge(entity, target):
 	var dest = entity.board_position
-	if dest[0] != target[0] and dest[1] != target[1]:
-		return dest
-	while dest[0] < target[0]:
-		if board[dest[0] + 1][dest[1]] == null:
-			dest[0] += 1
+	var offset
+	match entity.direction:
+		"right":
+			offset = Vector2i(1,0)
+		"left":
+			offset = Vector2i(-1,0)
+		"down":
+			offset = Vector2i(0,1)
+		"up":
+			offset = Vector2i(0,-1)
+			
+	while is_valid_position(dest + offset):
+		var next = dest + offset
+		if board[next[0]][next[1]] == null:
+			dest = next
 		else:
 			return dest
-	while dest[0] > target[0]:
-		if board[dest[0] - 1][dest[1]] == null:
-			dest[0] -= 1
-		else:
-			return dest
-	while dest[1] < target[1]:
-		if board[dest[0]][dest[1] + 1] == null:
-			dest[1] += 1
-		else:
-			return dest
-	while dest[1] > target[1]:
-		if board[dest[0]][dest[1] - 1] == null:
-			dest[1] -= 1
-		else:
-			return dest	
+	return dest

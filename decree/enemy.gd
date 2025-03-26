@@ -39,7 +39,7 @@ func find_targets():
 		return player
 	elif y > 0 and board[x][y-1] == player:
 		return player
-	return null
+	return self
 
 func destroy():
 	self.queue_free()

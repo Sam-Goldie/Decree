@@ -33,6 +33,10 @@ var rock_count = 5
 @onready
 var rocks = []
 @onready
+var bulls = []
+@onready
+var bull_queue = []
+@onready
 var board
 @onready
 var move_patterns = move_pattern_scene.new()
@@ -105,7 +109,7 @@ func _ready():
 		while board_position == Vector2i(-1,-1) or board[board_position[0]][board_position[1]] != null:
 			board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
 		bull.initialize(board_position, 5, 2, false, board, 100, 1, true, enemies, player, "bull", grid)
-		enemies.append(bull)
+		bulls.append(bull)
 		bull.position = bull.board_position * 16
 		board[bull.board_position[0]][bull.board_position[1]] = bull
 		navigation_layer.add_child(bull)
@@ -167,9 +171,13 @@ func take_enemy_turn():
 		return
 	var tween = create_tween()
 	remove_target_highlights(player.board_position)
-	var enemy = enemies[enemy_idx]
+	var enemy
+	if len(bull_queue) > 0:
+		enemy = bull_queue.pop_at(len(bull_queue) - 1)
+	else:
+		enemy = enemies[enemy_idx]
+		enemy_idx += 1
 	var anim_player = enemy.get_node("AnimationPlayer")
-	enemy_idx += 1
 	if enemy == null:
 		clear_grid()
 		take_enemy_turn()
@@ -193,33 +201,6 @@ func take_enemy_turn():
 		var target = enemy.find_targets()
 		if target != null:
 			attack(enemy, target, create_tween())
-		#var target = dest[0]
-		#for j in range(1, enemy.speed + 1):
-			#if j > len(dest) - 1:
-				#break
-			#var current = dest[j]
-			#if board[current[0]][current[1]] == null:
-				#target = current
-				#if j < len(dest) - 1:
-					#next = dest[j + 1]
-			#else:
-				#if j <= len(dest) - 1:
-					#next = current
-				#break
-				
-	#var attack_target
-	#match enemy.type:
-		#"warrior":
-			#attack_target = enemy.find_targets(next)
-		#"archer":
-			#attack_target = enemy.find_targets(player)
-		#"bull":
-			#attack_target = enemy.find_targets(player)
-	#var did_attack = false
-	#if attack_target != null:
-		#attack(enemy, attack_target, tween)
-		#await anim_player.animation_finished
-		#did_attack = true
 	take_enemy_turn()
 	
 func clear_dead():
@@ -264,6 +245,23 @@ func move(entity, target, tween):
 		did_move = true
 		if tween.is_running:
 			await tween.finished
+		for i in range(len(bulls)):
+			var bull = bulls[i]
+			for queued_bull in bull_queue:
+				if queued_bull == bull:
+					continue
+			if bull == entity:
+				continue
+			if bull.board_position[0] == target[0] or bull.board_position[1] == target[1]:
+				if bull.board_position[0] < target[0]:
+					bull.direction = "right"
+				elif bull.board_position[0] > target[0]:
+					bull.direction = "left"
+				elif bull.board_position[1] < target[1]:
+					bull.direction = "down"
+				elif bull.board_position[1] > target[1]:
+					bull.direction = "up"
+				bull_queue.append(bull)
 	if entity == player:
 		player.prev_board_position = prev_position
 	if did_move:
