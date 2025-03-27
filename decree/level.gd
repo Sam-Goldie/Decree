@@ -367,6 +367,8 @@ func revert_move(tween):
 	player.has_moved = false
 	if did_move:
 		grid.set_point_solid(player_pos, false)
+		while !bull_queue.is_empty():
+			bull_queue.remove_at(len(bull_queue) - 1)
 	return did_move
 
 func destroy_rock(x, y):
