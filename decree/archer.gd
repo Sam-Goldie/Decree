@@ -29,7 +29,7 @@ func initialize(board_position, hp, damage, has_moved, board, speed, range, is_e
 	self.player = player
 	self.type = type
 
-func find_targets(next_move):
+func find_targets():
 	var target = board_position
 	var attack_axis
 	if board_position[0] != player.board_position[0] and board_position[1] != player.board_position[1]:

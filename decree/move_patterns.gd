@@ -23,7 +23,6 @@ func get_distance(board_pos1 : Vector2i, board_pos2 : Vector2i):
 	return abs(total_distance[0]) + abs(total_distance[1])
 
 func shift_chase(entity, target):
-	var dest
 	var offset = entity.board_position - target
 	if offset[0] < 0:
 		return entity.board_position + Vector2i(1,0)
@@ -44,25 +43,19 @@ func shift_target(entity, target):
 		return target
 
 func shift_chase_axis(entity, target):
-	var path = []
-	#var path_distance = 0
 	var target_x = target[0]
 	var target_y = target[1]
 	if entity.board_position[0] == target_x or entity.board_position[1] == target_y:
-		return path
-	for i in range(Globals.BOARD_SIZE[1]):
-		var current_path = grid.get_id_path(entity.board_position, Vector2i(target_x, i), false)
-		#var current_distance = get_distance(entity.board_position, Vector2i(target_x, i))
-		if len(path) == 0 or (len(current_path) > 0 and len(current_path) < len(path)):
-			path = current_path
-			#path_distance = current_distance
-	for i in range(Globals.BOARD_SIZE[0]):
-		var current_path = grid.get_id_path(entity.board_position, Vector2i(i, target_y), false)
-		#var current_distance = get_distance(entity.board_position, Vector2i(i, target_y))
-		if len(path) == 0 or (len(current_path) > 0 and len(current_path) < len(path)):
-			path = current_path
-			#path_distance = current_distance
-	return path
+		return entity.board_position
+	var offset = entity.board_position - target
+	if offset[1] < 0:
+		return entity.board_position + Vector2i(0,1)
+	elif offset[1] > 0:
+		return entity.board_position + Vector2i(0,-1)
+	elif offset[0] < 0:
+		return entity.board_position + Vector2i(1,0)
+	else:
+		return entity.board_position + Vector2i(-1,0)
 
 func charge(entity, target):
 	var dest = entity.board_position

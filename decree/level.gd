@@ -19,7 +19,7 @@ var is_player_turn = true
 @onready
 var warrior_count = 2
 @onready
-var archer_count = 0
+var archer_count = 1
 @onready
 var bull_count = 1
 @onready
@@ -29,7 +29,7 @@ var enemy_idx = 0
 @onready
 var terrain = []
 @onready
-var rock_count = 5
+var rock_count = 15
 @onready
 var rocks = []
 @onready
@@ -66,6 +66,7 @@ func _ready():
 	player.range = 1
 	player.speed = 2
 	player.board_position = player_start
+	player.prev_board_position = Vector2i(-1,-1)
 	player.position = player_start * 16
 	player.is_enemy = false
 	navigation_layer.add_child(player)
@@ -244,6 +245,7 @@ func move(entity, target, tween):
 		did_move = true
 		if tween.is_running:
 			await tween.finished
+			
 		for i in range(len(bulls)):
 			var bull = bulls[i]
 			for queued_bull in bull_queue:
@@ -325,9 +327,8 @@ func _on_tile_click(tile):
 func _on_tile_right_click():
 	if !is_player_turn:
 		return
-	var tween = create_tween()
 	if player.has_moved:
-		revert_move(tween)
+		revert_move(create_tween())
 
 func highlight_targets(board_position):
 	var offsets = [Vector2i(1,0), Vector2i(0,1), Vector2i(-1,0), Vector2i(0,-1)]
@@ -350,8 +351,23 @@ func remove_highlight_tile(board_position):
 	terrain[board_position[0]][board_position[1]].get_node("BlinkSquare").self_modulate.a = 0
 
 func revert_move(tween):
-	await move(player, player.prev_board_position, tween)
+	var did_move = false
+	var player_pos = player.board_position
+	var prev = player.prev_board_position
+	remove_target_highlights(player_pos)
+	if board[prev[0]][prev[1]] == null:
+		tween.tween_property(player, "position", Vector2(prev * 16), 0.2)
+		board[player_pos[0]][player_pos[1]] = null
+		board[prev[0]][prev[1]] = player
+		player.board_position = prev
+		did_move = true
+		if tween.is_running:
+			await tween.finished
+	player.prev_board_position = Vector2i(-1,-1)
 	player.has_moved = false
+	if did_move:
+		grid.set_point_solid(player_pos, false)
+	return did_move
 
 func destroy_rock(x, y):
 	terrain[x][y].get_node("Sprite2D").texture.region = Rect2(48, 0, 16, 16)
