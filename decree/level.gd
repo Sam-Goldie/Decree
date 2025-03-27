@@ -164,7 +164,7 @@ func take_enemy_turn():
 	if len(enemies) == 0:
 		_on_player_win()
 		return
-	if enemy_idx > len(enemies) - 1:
+	if enemy_idx > len(enemies) - 1 and len(bull_queue) == 0:
 		enemy_idx = 0
 		clear_dead()
 		is_player_turn = true
@@ -177,7 +177,6 @@ func take_enemy_turn():
 	else:
 		enemy = enemies[enemy_idx]
 		enemy_idx += 1
-	var anim_player = enemy.get_node("AnimationPlayer")
 	if enemy == null:
 		clear_grid()
 		take_enemy_turn()
