@@ -161,6 +161,9 @@ func is_in_range(position1, position2, range):
 		return false 
 
 func take_enemy_turn():
+	$Timer.start()
+	await $Timer.timeout
+	
 	solidify_grid()
 	if len(enemies) == 0:
 		_on_player_win()
@@ -171,7 +174,6 @@ func take_enemy_turn():
 		is_player_turn = true
 		return
 	var tween = create_tween()
-	remove_target_highlights(player.board_position)
 	var enemy
 	if len(bull_queue) > 0:
 		enemy = bull_queue.pop_at(len(bull_queue) - 1)
@@ -200,7 +202,7 @@ func take_enemy_turn():
 		await move(enemy, dest, create_tween())
 		var target = enemy.find_targets()
 		if target != null:
-			attack(enemy, target, create_tween())
+			await attack(enemy, target, create_tween())
 	take_enemy_turn()
 	
 func clear_dead():
@@ -322,13 +324,14 @@ func _on_tile_click(tile):
 			await push(board[tile.board_position[0]][tile.board_position[1]], offset, 2)
 		var anim_player = player.get_node("AnimationPlayer")
 		player.has_moved = false
+		remove_target_highlights(player.board_position)
 		take_enemy_turn()
 
 func _on_tile_right_click():
 	if !is_player_turn:
 		return
 	if player.has_moved:
-		revert_move(create_tween())
+		await revert_move(create_tween())
 
 func highlight_targets(board_position):
 	var offsets = [Vector2i(1,0), Vector2i(0,1), Vector2i(-1,0), Vector2i(0,-1)]
