@@ -28,14 +28,18 @@ func initialize(board_position, hp, damage, has_moved, board, speed, range, is_e
 	self.player = player
 	self.type = type
 	
-func find_targets(next_dest):
-	if next_dest == null:
-		return null
-	var target = board[next_dest[0]][next_dest[1]]
-	if target != null:
-		return target
-	else:
-		return null
+func find_targets():
+	var x = self.board_position[0]
+	var y = self.board_position[1]
+	if x < Globals.BOARD_SIZE[0] - 1 and board[x+1][y] == player:
+		return player
+	elif x > 0 and board[x-1][y] == player:
+		return player
+	elif y < Globals.BOARD_SIZE[1] - 1 and board[x][y+1] == player:
+		return player
+	elif y > 0 and board[x][y-1] == player:
+		return player
+	return self
 
 func destroy():
 	self.queue_free()
