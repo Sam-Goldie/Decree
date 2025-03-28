@@ -160,10 +160,15 @@ func is_in_range(position1, position2, range):
 	else:
 		return false 
 
-func take_enemy_turn():
-	$Timer.start()
+func action_delay(_duration):
+	if _duration != null:
+		$Timer.start(_duration)
+	else:
+		$Timer.start()
 	await $Timer.timeout
-	
+
+func take_enemy_turn():
+	await action_delay(null)
 	solidify_grid()
 	if len(enemies) == 0:
 		_on_player_win()
@@ -193,15 +198,16 @@ func take_enemy_turn():
 		"bull":
 			dest = move_patterns.charge(enemy, player.board_position)
 	if dest != null and dest != enemy.board_position and board[dest[0]][dest[1]] != null:
-		attack(enemy, board[dest[0]][dest[1]], create_tween())
+		await attack(enemy, board[dest[0]][dest[1]], create_tween())
 	elif dest == enemy.board_position:
 		var target = enemy.find_targets()
 		if target != null:
-			attack(enemy, target, create_tween())
+			await attack(enemy, target, create_tween())
 	else:
 		await move(enemy, dest, create_tween())
 		var target = enemy.find_targets()
 		if target != null:
+			await action_delay(null)
 			await attack(enemy, target, create_tween())
 	take_enemy_turn()
 	
