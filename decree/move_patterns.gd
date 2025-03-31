@@ -1,10 +1,8 @@
 class_name MovePatterns
 
-var grid : AStarGrid2D
 var board
 
 func _init():
-	grid = Globals.GRID
 	board = Globals.BOARD
 	
 func is_valid_position(board_position):
@@ -34,12 +32,7 @@ func shift_chase(entity, target):
 		return entity.board_position + Vector2i(0,-1)
 
 func shift_target(entity, target):
-	if grid.is_dirty():
-		grid.update()
-	var path = grid.get_id_path(entity.board_position, target, false)
-	if len(path) > entity.speed + 1 or len(path) == 0:
-		return null
-	else:
+	if get_distance(entity.board_position, target) <= entity.speed:
 		return target
 
 func shift_chase_axis(entity, target):
@@ -57,7 +50,7 @@ func shift_chase_axis(entity, target):
 	else:
 		return entity.board_position + Vector2i(-1,0)
 
-func charge(entity, target):
+func charge(entity):
 	var dest = entity.board_position
 	var offset
 	match entity.direction:

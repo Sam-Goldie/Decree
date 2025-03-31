@@ -11,13 +11,12 @@ var is_enemy : bool
 var enemies : Array
 var player
 var type
-var grid
 var direction
 
 func _ready():
 	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)
 
-func initialize(board_position, hp, damage, has_moved, board, speed, range, is_enemy, enemies, player, type, grid):
+func initialize(board_position, hp, damage, has_moved, board, speed, range, is_enemy, enemies, player, type):
 	self.board_position = board_position
 	self.hp = hp
 	self.damage = damage
@@ -29,7 +28,6 @@ func initialize(board_position, hp, damage, has_moved, board, speed, range, is_e
 	self.enemies = enemies
 	self.player = player
 	self.type = type
-	self.grid = grid
 
 func is_valid_position(board_position):
 	if board_position[0] < 0 or board_position[0] > Globals.BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > Globals.BOARD_SIZE[1] - 1:

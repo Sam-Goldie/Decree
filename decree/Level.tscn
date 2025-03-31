@@ -127,6 +127,9 @@ visible = false
 
 [node name="AnimationPlayer" parent="." instance=ExtResource("8_gaou4")]
 
+[node name="Timer" type="Timer" parent="."]
+wait_time = 0.1
+
 [connection signal="attack" from="Navigation/Player" to="." method="_on_attack"]
 [connection signal="lose" from="Navigation/Player" to="." method="_on_player_lose"]
 [connection signal="move" from="Navigation/Player" to="." method="_on_move"]
