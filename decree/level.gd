@@ -29,7 +29,7 @@ var enemy_idx = 0
 @onready
 var terrain = []
 @onready
-var rock_count = 15
+var rock_count = 9
 @onready
 var rocks = []
 @onready
@@ -162,12 +162,11 @@ func action_delay(_duration):
 
 func take_enemy_turn():
 	await action_delay(null)
-	if len(enemies) == 0:
-		_on_player_win()
-		return
 	if enemy_idx > len(enemies) - 1 and len(bull_queue) == 0:
 		enemy_idx = 0
 		clear_dead()
+		if len(enemies) == 0:
+			_on_player_win()
 		is_player_turn = true
 		return
 	var tween = create_tween()
@@ -223,9 +222,6 @@ func damage(target, amount):
 	else:
 		board[target.board_position[0]][target.board_position[1]] = null
 		target.destroy()
-		clear_dead()
-		if len(enemies) == 0:
-			_on_player_win()
 
 func move(entity, target, tween):
 	var did_move = false
@@ -277,10 +273,10 @@ func attack(entity, target, tween):
 		return
 	player.has_moved = false
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
-		damage(board[target_pos[0]][target_pos[1]], entity.damage)
 		var anim_player = entity.get_node("AnimationPlayer")
 		if anim_player != null:
 			await animate_attack(entity.board_position, target.board_position, anim_player)
+		damage(board[target_pos[0]][target_pos[1]], entity.damage)
 
 func animate_attack(entity_pos, target_pos, anim_player):
 	var offset = entity_pos - target_pos
@@ -388,9 +384,6 @@ func _restart_game():
 	get_tree().reload_current_scene()
 
 func show_turn_order():
-	#if grid.is_dirty():
-		#grid.update()
-	clear_dead()
 	for i in range(len(enemies)):
 		var enemy = enemies[i]
 		var turn_display = enemy.get_node(Globals.TURN_ORDER_PATH)
@@ -402,6 +395,8 @@ func show_turn_order():
 			
 func hide_turn_order():
 	for enemy in enemies:
+		if enemy == null:
+			continue
 		var turn_display = enemy.get_node(Globals.TURN_ORDER_PATH)
 		if turn_display.visible == false:
 			return
