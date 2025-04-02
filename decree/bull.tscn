@@ -27,6 +27,7 @@ shader_parameter/flash_value = null
 
 [node name="Bull" instance=ExtResource("1_cikh8")]
 script = ExtResource("2_yiyht")
+direction = ""
 
 [node name="Path2D" parent="." index="0"]
 curve = SubResource("Curve2D_rt3q5")

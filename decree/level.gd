@@ -27,6 +27,8 @@ var enemies = []
 @onready
 var enemy_idx = 0
 @onready
+var enemy_stack = []
+@onready
 var terrain = []
 @onready
 var rock_count = 9
@@ -40,6 +42,8 @@ var bull_queue = []
 var board
 @onready
 var move_patterns = move_pattern_scene.new()
+@onready
+var preview_board = Globals.PREVIEW_BOARD
 
 func _ready():
 	$EndScreen.connect("restart", _restart_game)
@@ -103,14 +107,14 @@ func _ready():
 		var board_position = Vector2i(-1,-1)
 		while board_position == Vector2i(-1,-1) or board[board_position[0]][board_position[1]] != null:
 			board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
-		bull.initialize(board_position, 5, 2, false, board, 100, 1, true, enemies, player, "bull")
+		bull.initialize(board_position, 5, 2, false, 100, 1, true, enemies, "bull")
 		bulls.append(bull)
 		bull.position = bull.board_position * 16
 		board[bull.board_position[0]][bull.board_position[1]] = bull
 		navigation_layer.add_child(bull)
 	for i in range(warrior_count):
 		var warrior = enemy_scene.instantiate()
-		warrior.initialize(Vector2i(-1,-1), 3, 1, false, board, 1, 1, true, enemies, player, "warrior")
+		warrior.initialize(Vector2i(-1,-1), 3, 1, false, 1, 1, true, enemies, "warrior")
 		enemies.append(warrior)
 		while warrior.board_position == Vector2i(-1,-1) or board[warrior.board_position[0]][warrior.board_position[1]] != null:
 			warrior.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
@@ -122,7 +126,7 @@ func _ready():
 		var board_position = Vector2i(-1,-1)
 		while board_position == Vector2i(-1,-1) or board[board_position[0]][board_position[1]] != null:
 			board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
-		archer.initialize(board_position, 3, 1, false, board, 1, 100, true, enemies, player, "archer")
+		archer.initialize(board_position, 3, 1, false, 1, 100, true, enemies, "archer")
 		enemies.append(archer)
 		archer.position = archer.board_position * 16
 		board[archer.board_position[0]][archer.board_position[1]] = archer
@@ -160,25 +164,10 @@ func action_delay(_duration):
 		$Timer.start()
 	await $Timer.timeout
 
-func take_enemy_turn():
-	await action_delay(null)
-	if enemy_idx > len(enemies) - 1 and len(bull_queue) == 0:
-		enemy_idx = 0
-		clear_dead()
-		if len(enemies) == 0:
-			_on_player_win()
-		is_player_turn = true
-		return
+func take_turn(enemy, board):
+	if !is_instance_valid(enemy) or enemy == null:
+		return null
 	var tween = create_tween()
-	var enemy
-	if len(bull_queue) > 0:
-		enemy = bull_queue.pop_at(len(bull_queue) - 1)
-	else:
-		enemy = enemies[enemy_idx]
-		enemy_idx += 1
-	if enemy == null:
-		take_enemy_turn()
-		return
 	var dest
 	match enemy.type:
 		"warrior":
@@ -187,20 +176,44 @@ func take_enemy_turn():
 			dest = move_patterns.shift_chase_axis(enemy, player.board_position)
 		"bull":
 			dest = move_patterns.charge(enemy)
-	if dest != null and dest != enemy.board_position and board[dest[0]][dest[1]] != null:
-		await attack(enemy, board[dest[0]][dest[1]], create_tween())
-	elif dest == enemy.board_position:
-		var target = enemy.find_targets()
-		if target != null:
-			await attack(enemy, target, create_tween())
-	else:
-		await move(enemy, dest, create_tween())
-		var target = enemy.find_targets()
-		if target != null:
-			await action_delay(null)
-			await attack(enemy, target, create_tween())
-	take_enemy_turn()
+	var target
+	if dest != null and dest != enemy.board_position:
+		if board[dest[0]][dest[1]] == null:
+			await move(board, enemy, dest, tween)
+		else:
+			target = board[dest[0]][dest[1]]
+	if target == null:
+		target = enemy.find_targets(board, player)
+	if target != null:
+		await attack(enemy, target, tween)
+			
+func take_enemy_turns():
+	for enemy in enemies:
+		if is_instance_valid(enemy) and enemy != null:
+			enemy_stack.insert(0, enemy)
+	while len(enemy_stack) > 0:
+		var enemy = enemy_stack.pop_back()
+		await take_turn(enemy, board)
+		clear_dead()
+		if len(enemies) == 0:
+			_on_player_win()
 	
+
+func preview_enemy_turns():
+	var preview_board = dup_board(board)
+	for enemy in enemies:
+		if is_instance_valid(enemy) and enemy != null:
+			enemy_stack.insert(0, enemy)
+	while len(enemy_stack) > 0:
+		var enemy = enemy_stack.pop_back()
+		var move = await take_turn(enemy, preview_board)
+		clear_dead()
+		if len(enemies) == 0:
+			_on_player_win()
+	
+func dup_board(board):
+	return board.duplicate()
+
 func clear_dead():
 	var dead_idx = []
 	for i in range(len(enemies)):
@@ -223,7 +236,7 @@ func damage(target, amount):
 		board[target.board_position[0]][target.board_position[1]] = null
 		target.destroy()
 
-func move(entity, target, tween):
+func move(board, entity, target, tween):
 	var did_move = false
 	var prev_position = entity.board_position
 	if entity == player:
@@ -244,10 +257,10 @@ func move(entity, target, tween):
 		for i in range(len(bulls)):
 			var bull = bulls[i]
 			var is_queued = false
-			for queued_bull in bull_queue:
-				if queued_bull == bull:
+			for enemy in enemy_stack:
+				if enemy == bull:
 					is_queued = true
-					continue
+					break
 			if is_queued:
 				continue
 			if bull == entity:
@@ -261,7 +274,7 @@ func move(entity, target, tween):
 					bull.direction = "down"
 				elif bull.board_position[1] > target[1]:
 					bull.direction = "up"
-				bull_queue.append(bull)
+				enemy_stack.append(bull)
 	if entity == player:
 		player.prev_board_position = prev_position
 	return did_move
@@ -300,7 +313,7 @@ func _on_tile_click(tile):
 		if is_in_range(player.board_position, tile.board_position, player.speed):
 			var dest = move_patterns.shift_target(player, tile.board_position)
 			if dest != null:
-				var did_move = await move(player, tile.board_position, tween)
+				var did_move = await move(board, player, tile.board_position, tween)
 				if did_move:
 					highlight_targets(player.board_position)
 	elif player.has_moved:
@@ -320,7 +333,8 @@ func _on_tile_click(tile):
 		player.has_moved = false
 		is_player_turn = false
 		remove_target_highlights(player.board_position)
-		take_enemy_turn()
+		take_enemy_turns()
+		is_player_turn = true
 
 func _on_tile_right_click():
 	if !is_player_turn:
@@ -364,7 +378,6 @@ func revert_move(tween):
 	player.prev_board_position = Vector2i(-1,-1)
 	player.has_moved = false
 	if did_move:
-		#grid.set_point_solid(player_pos, false)
 		while !bull_queue.is_empty():
 			bull_queue.remove_at(len(bull_queue) - 1)
 	return did_move
@@ -384,6 +397,7 @@ func _restart_game():
 	get_tree().reload_current_scene()
 
 func show_turn_order():
+	clear_dead()
 	for i in range(len(enemies)):
 		var enemy = enemies[i]
 		var turn_display = enemy.get_node(Globals.TURN_ORDER_PATH)
@@ -403,20 +417,9 @@ func hide_turn_order():
 		else:
 			turn_display.visible = false
 
-#func solidify_grid():
-	#for i in range(Globals.BOARD_SIZE[0]):
-		#for j in range(Globals.BOARD_SIZE[1]):
-			#if board[i][j] != null and board[i][j] != player:
-				#grid.set_point_solid(Vector2i(i,j))
-#
-#func clear_grid():
-	#for i in range(Globals.BOARD_SIZE[0]):
-		#for j in range(Globals.BOARD_SIZE[1]):
-			#grid.set_point_solid(Vector2i(i,j), false)
-
 func push(entity, offset, distance):
 	for i in range(distance):
 		var dest = entity.board_position + offset
 		if is_valid_position(dest) and board[dest[0]][dest[1]] != null:
 			break
-		await move(entity, dest, create_tween())
+		await move(board, entity, dest, create_tween())
