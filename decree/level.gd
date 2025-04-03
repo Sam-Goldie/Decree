@@ -17,11 +17,11 @@ var player_start = Vector2i(2,2)
 @onready
 var is_player_turn = true
 @onready
-var warrior_count = 2
+var warrior_count = 1
 @onready
-var archer_count = 1
+var archer_count = 0
 @onready
-var bull_count = 1
+var bull_count = 0
 @onready
 var enemies = []
 @onready
@@ -31,7 +31,7 @@ var enemy_stack = []
 @onready
 var terrain = []
 @onready
-var rock_count = 9
+var rock_count = 0
 @onready
 var rocks = []
 @onready
@@ -44,6 +44,8 @@ var board
 var move_patterns = move_pattern_scene.new()
 @onready
 var preview_board = Globals.PREVIEW_BOARD
+@onready
+var preview_entities = []
 
 func _ready():
 	$EndScreen.connect("restart", _restart_game)
@@ -133,12 +135,14 @@ func _ready():
 		navigation_layer.add_child(archer)
 
 func _process(_delta):
-	var pos = get_global_mouse_position()
+	var pos = get_viewport().get_mouse_position()
 	var board_pos = get_board_position(pos)
-	if is_valid_position(board_pos) and board[board_pos[0]][board_pos[1]] != null and board[board_pos[0]][board_pos[1]].is_enemy:
+	if is_player_turn and is_valid_position(board_pos) and board[board_pos[0]][board_pos[1]] != null and board[board_pos[0]][board_pos[1]].is_enemy:
 		show_turn_order()
+		show_preview()
 	else:
 		hide_turn_order()
+		hide_preview()
 
 func is_valid_position(board_position):
 	if board_position[0] < 0 or board_position[0] > Globals.BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > Globals.BOARD_SIZE[1] - 1:
@@ -164,10 +168,20 @@ func action_delay(_duration):
 		$Timer.start()
 	await $Timer.timeout
 
+func show_preview():
+	for entity in preview_entities:
+		entity.visible = true
+
+func hide_preview():
+	for entity in preview_entities:
+		entity.visible = false
+
 func take_turn(enemy, board):
 	if !is_instance_valid(enemy) or enemy == null:
 		return null
 	var tween = create_tween()
+	var validity = is_instance_valid(enemy)
+	var nullness = enemy == null
 	var dest
 	match enemy.type:
 		"warrior":
@@ -182,45 +196,66 @@ func take_turn(enemy, board):
 			await move(board, enemy, dest, tween)
 		else:
 			target = board[dest[0]][dest[1]]
-	if target == null:
+	if target == null and is_instance_valid(enemy):
 		target = enemy.find_targets(board, player)
-	if target != null:
+	if target != null and is_instance_valid(enemy):
 		await attack(enemy, target, tween)
 			
 func take_enemy_turns():
 	for enemy in enemies:
-		if is_instance_valid(enemy) and enemy != null:
-			enemy_stack.insert(0, enemy)
+		enemy_stack.insert(0, enemy)
 	while len(enemy_stack) > 0:
 		var enemy = enemy_stack.pop_back()
+		if !is_instance_valid(enemy) or enemy == null:
+			continue
 		await take_turn(enemy, board)
-		clear_dead()
+		clear_dead(enemies)
 		if len(enemies) == 0:
 			_on_player_win()
-	
+	preview_enemy_turns()
+
+func clear_preview():
+	for entity in preview_entities:
+		entity.free()
 
 func preview_enemy_turns():
-	var preview_board = dup_board(board)
-	for enemy in enemies:
-		if is_instance_valid(enemy) and enemy != null:
-			enemy_stack.insert(0, enemy)
+	await clear_preview()
+	preview_board = []
+	preview_entities = []
+	for i in range(Globals.BOARD_SIZE[0]):
+		var col = []
+		for j in range(Globals.BOARD_SIZE[1]):
+			var node
+			if board[i][j] != null:
+				node = board[i][j].duplicate()
+				$Navigation.add_child(node)
+				preview_entities.append(node)
+				node.self_modulate.a = 0.3
+			col.append(node)
+		preview_board.append(col)
+	#for enemy in enemies:
+		#var preview = enemy.duplicate()
+		#preview_enemies.append(preview)
+		#$Navigation.add_child(preview)
+	for entity in preview_entities:
+		if is_instance_valid(entity) and entity != null and entity.is_enemy:
+			enemy_stack.insert(0, entity)
 	while len(enemy_stack) > 0:
 		var enemy = enemy_stack.pop_back()
-		var move = await take_turn(enemy, preview_board)
-		clear_dead()
-		if len(enemies) == 0:
-			_on_player_win()
+		await take_turn(enemy, preview_board)
+		#clear_dead(preview_)
 	
 func dup_board(board):
 	return board.duplicate()
 
-func clear_dead():
+func clear_dead(entity_list):
 	var dead_idx = []
-	for i in range(len(enemies)):
-		if enemies[i] == null or enemies[i].is_queued_for_deletion():
+	for i in range(len(entity_list)):
+		if entity_list[i] == null or entity_list[i].is_queued_for_deletion():
 			dead_idx.append(i)
 	for i in range(len(dead_idx)):
-		enemies.remove_at(dead_idx[-i-1])
+		var dead_entity = entity_list.pop_at(dead_idx[-i-1])
+		
 	dead_idx = []
 	for i in range(len(rocks)):
 		if rocks[i] == null or rocks[i].is_queued_for_deletion():
@@ -397,7 +432,7 @@ func _restart_game():
 	get_tree().reload_current_scene()
 
 func show_turn_order():
-	clear_dead()
+	clear_dead(enemies)
 	for i in range(len(enemies)):
 		var enemy = enemies[i]
 		var turn_display = enemy.get_node(Globals.TURN_ORDER_PATH)
