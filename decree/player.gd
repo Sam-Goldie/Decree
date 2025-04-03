@@ -8,6 +8,7 @@ var has_moved : bool
 var range : int
 var speed : int
 var is_enemy : bool
+var preview : Node2D
 
 signal move(entity, target)
 signal attack(entity, target)

@@ -50,7 +50,7 @@ func shift_chase_axis(entity, target):
 	else:
 		return entity.board_position + Vector2i(-1,0)
 
-func charge(entity):
+func charge(entity, _target_player):
 	var dest = entity.board_position
 	var offset
 	match entity.direction:

@@ -70,6 +70,8 @@ func _ready():
 	player.position = player_start * 16
 	player.is_enemy = false
 	navigation_layer.add_child(player)
+	player.preview = player.duplicate()
+	navigation_layer.add_child(player.preview)
 	board[player_start[0]][player_start[1]] = player
 	for i in range(rock_count):
 		var x = rng.randi_range(0, Globals.BOARD_SIZE[0] - 1)
@@ -137,7 +139,11 @@ func _ready():
 func _process(_delta):
 	var pos = get_viewport().get_mouse_position()
 	var board_pos = get_board_position(pos)
-	if is_player_turn and is_valid_position(board_pos) and board[board_pos[0]][board_pos[1]] != null and board[board_pos[0]][board_pos[1]].is_enemy:
+	if is_player_turn and is_valid_position(board_pos) and is_in_range(player.board_position, board_pos, player.speed):
+		if player.preview.board_position != board_pos:
+			player.preview.board_position = board_pos
+			player.preview.position = board_pos * 16
+			preview_enemy_turns(player.preview)
 		show_turn_order()
 		show_preview()
 	else:
@@ -176,7 +182,7 @@ func hide_preview():
 	for entity in preview_entities:
 		entity.visible = false
 
-func take_turn(enemy, board):
+func take_turn(enemy, board, target_player):
 	if !is_instance_valid(enemy) or enemy == null:
 		return null
 	var tween = create_tween()
@@ -185,11 +191,11 @@ func take_turn(enemy, board):
 	var dest
 	match enemy.type:
 		"warrior":
-			dest = move_patterns.shift_chase(enemy, player.board_position)
+			dest = move_patterns.shift_chase(enemy, target_player.board_position)
 		"archer":
-			dest = move_patterns.shift_chase_axis(enemy, player.board_position)
+			dest = move_patterns.shift_chase_axis(enemy, target_player.board_position)
 		"bull":
-			dest = move_patterns.charge(enemy)
+			dest = move_patterns.charge(enemy, target_player.board_position)
 	var target
 	if dest != null and dest != enemy.board_position:
 		if board[dest[0]][dest[1]] == null:
@@ -208,17 +214,20 @@ func take_enemy_turns():
 		var enemy = enemy_stack.pop_back()
 		if !is_instance_valid(enemy) or enemy == null:
 			continue
-		await take_turn(enemy, board)
+		await take_turn(enemy, board, player)
 		clear_dead(enemies)
 		if len(enemies) == 0:
 			_on_player_win()
-	preview_enemy_turns()
+	is_player_turn = true
+	preview_enemy_turns(player.board_position)
 
 func clear_preview():
+	player.preview.visible = false
 	for entity in preview_entities:
-		entity.free()
+		if entity != player.preview:
+			entity.free()
 
-func preview_enemy_turns():
+func preview_enemy_turns(target):
 	await clear_preview()
 	preview_board = []
 	preview_entities = []
@@ -227,10 +236,16 @@ func preview_enemy_turns():
 		for j in range(Globals.BOARD_SIZE[1]):
 			var node
 			if board[i][j] != null:
-				node = board[i][j].duplicate()
-				$Navigation.add_child(node)
-				preview_entities.append(node)
-				node.self_modulate.a = 0.3
+				if Vector2i(i, j) == player.preview.board_position:
+					node = player.preview
+					preview_entities.append(node)
+				elif board[i][j] != player:
+					node = board[i][j].duplicate()
+					$Navigation.add_child(node)
+					preview_entities.append(node)
+					if board[i][j] == player:
+						player.preview = node
+					node.self_modulate.a = 0.3
 			col.append(node)
 		preview_board.append(col)
 	#for enemy in enemies:
@@ -242,7 +257,7 @@ func preview_enemy_turns():
 			enemy_stack.insert(0, entity)
 	while len(enemy_stack) > 0:
 		var enemy = enemy_stack.pop_back()
-		await take_turn(enemy, preview_board)
+		await take_turn(enemy, preview_board, player.preview)
 		#clear_dead(preview_)
 	
 func dup_board(board):
@@ -349,8 +364,11 @@ func _on_tile_click(tile):
 			var dest = move_patterns.shift_target(player, tile.board_position)
 			if dest != null:
 				var did_move = await move(board, player, tile.board_position, tween)
-				if did_move:
-					highlight_targets(player.board_position)
+				is_player_turn = false
+				take_enemy_turns()
+				
+				#if did_move:
+					#highlight_targets(player.board_position)
 	elif player.has_moved:
 		var offset
 		if player.board_position[0] < tile.board_position[0]:
@@ -369,7 +387,6 @@ func _on_tile_click(tile):
 		is_player_turn = false
 		remove_target_highlights(player.board_position)
 		take_enemy_turns()
-		is_player_turn = true
 
 func _on_tile_right_click():
 	if !is_player_turn:
