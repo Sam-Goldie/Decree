@@ -26,4 +26,5 @@ func _on_level_confirm_attack():
 	end_turn.emit()
 
 func destroy():
-	lose.emit()
+	if preview != null:
+		lose.emit()

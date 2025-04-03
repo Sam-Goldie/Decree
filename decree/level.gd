@@ -71,6 +71,7 @@ func _ready():
 	player.is_enemy = false
 	navigation_layer.add_child(player)
 	player.preview = player.duplicate()
+	player.preview.preview = null
 	navigation_layer.add_child(player.preview)
 	board[player_start[0]][player_start[1]] = player
 	for i in range(rock_count):
@@ -186,8 +187,6 @@ func take_turn(enemy, board, target_player):
 	if !is_instance_valid(enemy) or enemy == null:
 		return null
 	var tween = create_tween()
-	var validity = is_instance_valid(enemy)
-	var nullness = enemy == null
 	var dest
 	match enemy.type:
 		"warrior":
@@ -203,9 +202,9 @@ func take_turn(enemy, board, target_player):
 		else:
 			target = board[dest[0]][dest[1]]
 	if target == null and is_instance_valid(enemy):
-		target = enemy.find_targets(board, player)
+		target = enemy.find_targets(board, target_player)
 	if target != null and is_instance_valid(enemy):
-		await attack(enemy, target, tween)
+		await attack(enemy, target, tween, board)
 			
 func take_enemy_turns():
 	for enemy in enemies:
@@ -229,25 +228,23 @@ func clear_preview():
 
 func preview_enemy_turns(target):
 	await clear_preview()
+	player.preview.visible = true
 	preview_board = []
 	preview_entities = []
 	for i in range(Globals.BOARD_SIZE[0]):
 		var col = []
 		for j in range(Globals.BOARD_SIZE[1]):
 			var node
-			if board[i][j] != null:
-				if Vector2i(i, j) == player.preview.board_position:
-					node = player.preview
-					preview_entities.append(node)
-				elif board[i][j] != player:
-					node = board[i][j].duplicate()
-					$Navigation.add_child(node)
-					preview_entities.append(node)
-					if board[i][j] == player:
-						player.preview = node
-					node.self_modulate.a = 0.3
+			if board[i][j] != null and board[i][j] != player:
+				node = board[i][j].duplicate()
+				$Navigation.add_child(node)
+				preview_entities.append(node)
+				if board[i][j] == player:
+					player.preview = node
+				node.modulate.a = 0.1
 			col.append(node)
 		preview_board.append(col)
+	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
 	#for enemy in enemies:
 		#var preview = enemy.duplicate()
 		#preview_enemies.append(preview)
@@ -278,7 +275,7 @@ func clear_dead(entity_list):
 	for i in range(len(dead_idx)):
 		rocks.remove_at(dead_idx[-i-1])
 
-func damage(target, amount):
+func damage(target, amount, board):
 	target.hp -= amount
 	if target.hp > 0:
 		var health = target.get_node("Path2D/PathFollow2D/Sprite2D/HealthDisplay").reduce_health(amount)
@@ -329,7 +326,7 @@ func move(board, entity, target, tween):
 		player.prev_board_position = prev_position
 	return did_move
 
-func attack(entity, target, tween):
+func attack(entity, target, tween, board):
 	var entity_pos = entity.board_position
 	var target_pos = target.board_position
 	if !is_in_range(entity_pos, target_pos, entity.range):
@@ -339,7 +336,7 @@ func attack(entity, target, tween):
 		var anim_player = entity.get_node("AnimationPlayer")
 		if anim_player != null:
 			await animate_attack(entity.board_position, target.board_position, anim_player)
-		damage(board[target_pos[0]][target_pos[1]], entity.damage)
+		damage(board[target_pos[0]][target_pos[1]], entity.damage, board)
 
 func animate_attack(entity_pos, target_pos, anim_player):
 	var offset = entity_pos - target_pos
