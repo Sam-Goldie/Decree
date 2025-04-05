@@ -17,7 +17,7 @@ var player_start = Vector2i(2,2)
 @onready
 var is_player_turn = true
 @onready
-var warrior_count = 1
+var warrior_count = 3
 @onready
 var archer_count = 0
 @onready
@@ -140,7 +140,7 @@ func _ready():
 func _process(_delta):
 	var pos = get_viewport().get_mouse_position()
 	var board_pos = get_board_position(pos)
-	if is_player_turn and is_valid_position(board_pos) and is_in_range(player.board_position, board_pos, player.speed):
+	if is_player_turn and is_valid_position(board_pos) and is_in_range(player.board_position, board_pos, player.speed) and board_pos != player.board_position:
 		if player.preview.board_position != board_pos:
 			player.preview.board_position = board_pos
 			player.preview.position = board_pos * 16
@@ -177,11 +177,13 @@ func action_delay(_duration):
 
 func show_preview():
 	for entity in preview_entities:
-		entity.visible = true
+		if is_instance_valid(entity):
+			entity.visible = true
 
 func hide_preview():
 	for entity in preview_entities:
-		entity.visible = false
+		if is_instance_valid(entity):
+			entity.visible = false
 
 func take_turn(enemy, board, target_player):
 	if !is_instance_valid(enemy) or enemy == null:
@@ -230,7 +232,13 @@ func preview_enemy_turns(target):
 	await clear_preview()
 	player.preview.visible = true
 	preview_board = []
-	preview_entities = []
+	preview_board.resize(Globals.BOARD_SIZE[0])
+	for i in range(Globals.BOARD_SIZE[0]):
+		var preview_col = []
+		preview_col.resize(Globals.BOARD_SIZE[1])
+		preview_board[i] = preview_col
+	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
+	preview_entities = [player.preview]
 	for i in range(Globals.BOARD_SIZE[0]):
 		var col = []
 		for j in range(Globals.BOARD_SIZE[1]):
@@ -239,16 +247,8 @@ func preview_enemy_turns(target):
 				node = board[i][j].duplicate()
 				$Navigation.add_child(node)
 				preview_entities.append(node)
-				if board[i][j] == player:
-					player.preview = node
-				node.modulate.a = 0.1
-			col.append(node)
-		preview_board.append(col)
-	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
-	#for enemy in enemies:
-		#var preview = enemy.duplicate()
-		#preview_enemies.append(preview)
-		#$Navigation.add_child(preview)
+				node.modulate.a = .5
+				preview_board[i][j] = node
 	for entity in preview_entities:
 		if is_instance_valid(entity) and entity != null and entity.is_enemy:
 			enemy_stack.insert(0, entity)
@@ -276,6 +276,8 @@ func clear_dead(entity_list):
 		rocks.remove_at(dead_idx[-i-1])
 
 func damage(target, amount, board):
+	if !is_instance_valid(target) or target == null:
+		return
 	target.hp -= amount
 	if target.hp > 0:
 		var health = target.get_node("Path2D/PathFollow2D/Sprite2D/HealthDisplay").reduce_health(amount)
@@ -329,14 +331,14 @@ func move(board, entity, target, tween):
 func attack(entity, target, tween, board):
 	var entity_pos = entity.board_position
 	var target_pos = target.board_position
-	if !is_in_range(entity_pos, target_pos, entity.range):
+	if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
 		return
 	player.has_moved = false
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
 		var anim_player = entity.get_node("AnimationPlayer")
 		if anim_player != null:
 			await animate_attack(entity.board_position, target.board_position, anim_player)
-		damage(board[target_pos[0]][target_pos[1]], entity.damage, board)
+		damage(target, entity.damage, board)
 
 func animate_attack(entity_pos, target_pos, anim_player):
 	var offset = entity_pos - target_pos

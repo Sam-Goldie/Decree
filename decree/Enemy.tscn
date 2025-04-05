@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://c4drp01fqj2e7"]
+[gd_scene load_steps=7 format=3 uid="uid://c4drp01fqj2e7"]
 
 [ext_resource type="Script" path="res://enemy.gd" id="1_a12p4"]
 [ext_resource type="Texture2D" uid="uid://br3n70ti57btw" path="res://Enemy.png" id="1_xvn8d"]
@@ -8,24 +8,6 @@
 
 [sub_resource type="Curve2D" id="Curve2D_vynlp"]
 resource_local_to_scene = true
-
-[sub_resource type="Shader" id="Shader_22fs5"]
-code = "shader_type canvas_item;
-
-uniform vec4 flash_color : source_color;
-uniform float flash_value : hint_range(0.0,1.0,0.1);
-
-void fragment() {
-	vec4 texture_color = texture(TEXTURE, UV);
-	COLOR = mix(texture_color, flash_color, flash_value);
-	COLOR.a = texture_color.a;
-}"
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_qn0dj"]
-resource_local_to_scene = true
-shader = SubResource("Shader_22fs5")
-shader_parameter/flash_color = Color(1, 0.0980392, 0.0784314, 1)
-shader_parameter/flash_value = null
 
 [node name="Enemy" type="Node2D"]
 script = ExtResource("1_a12p4")
@@ -39,7 +21,6 @@ loop = false
 script = ExtResource("2_ob0ix")
 
 [node name="Sprite2D" type="Sprite2D" parent="Path2D/PathFollow2D"]
-material = SubResource("ShaderMaterial_qn0dj")
 texture = ExtResource("1_xvn8d")
 offset = Vector2(8, 8)
 
