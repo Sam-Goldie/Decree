@@ -46,6 +46,8 @@ var move_patterns = move_pattern_scene.new()
 var preview_board = Globals.PREVIEW_BOARD
 @onready
 var preview_entities = []
+@onready
+var is_previewing
 
 func _ready():
 	$EndScreen.connect("restart", _restart_game)
@@ -55,11 +57,14 @@ func _ready():
 	var navigation_layer = $Navigation
 	for i in range(Globals.BOARD_SIZE[0]):
 		var navi_row = []
+		var preview_row = []
 		var terrain_row = []
 		for j in range(Globals.BOARD_SIZE[1]):
 			navi_row.append(null)
+			preview_row.append(null)
 			terrain_row.append(null)
 		board.append(navi_row)
+		preview_board.append(preview_row)
 		terrain.append(terrain_row)
 	player.hp = 5
 	player.damage = 1
@@ -140,16 +145,49 @@ func _ready():
 func _process(_delta):
 	var pos = get_viewport().get_mouse_position()
 	var board_pos = get_board_position(pos)
-	if is_player_turn and is_valid_position(board_pos) and is_in_range(player.board_position, board_pos, player.speed) and board_pos != player.board_position:
-		if player.preview.board_position != board_pos:
-			player.preview.board_position = board_pos
-			player.preview.position = board_pos * 16
-			preview_enemy_turns(player.preview)
-		show_turn_order()
-		show_preview()
-	else:
+	if !is_valid_position(board_pos) or !is_in_range(player.board_position, board_pos, player.speed): 
+		clear_preview()
 		hide_turn_order()
 		hide_preview()
+		is_previewing = false
+		return
+	if is_previewing:
+		return
+	is_previewing = true
+	var target = board[board_pos[0]][board_pos[1]]
+	if is_player_turn and is_valid_position(board_pos) and is_in_range(player.board_position, board_pos, player.speed + 1) and board_pos != player.board_position:
+		if target == null and is_in_range(player.board_position, board_pos, player.speed):
+			preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = null
+			player.preview.board_position = board_pos
+			player.preview.position = board_pos * 16
+			preview_board[board_pos[0]][board_pos[1]] = player.preview
+			preview_enemy_turns(player.preview)
+		elif target != null and target.is_enemy:
+			var dests = []
+			var offsets = [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]
+			for offset in offsets:
+				var dest = board_pos + offset
+				if is_valid_position(dest) and is_in_range(player.board_position, dest, player.speed) and board[dest[0]][dest[1]] == null:
+					dests.append(dest)
+			var closest_dest
+			var distance = INF
+			for dest in dests:
+				if pos.distance_to(dest * 16) < distance:
+					distance = pos.distance_to(dest * 16)
+					closest_dest = dest
+			if closest_dest != null:
+				preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = null
+				player.preview.board_position = closest_dest
+				player.preview.position = closest_dest * 16
+				preview_board[closest_dest[0]][closest_dest[1]] = player.preview
+				preview_enemy_turns(player.preview)
+				show_turn_order()
+				show_preview()
+	else:
+		clear_preview()
+		hide_turn_order()
+		hide_preview()
+		is_previewing = false
 
 func is_valid_position(board_position):
 	if board_position[0] < 0 or board_position[0] > Globals.BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > Globals.BOARD_SIZE[1] - 1:
@@ -225,22 +263,18 @@ func take_enemy_turns():
 func clear_preview():
 	player.preview.visible = false
 	for entity in preview_entities:
-		if entity != player.preview:
+		if entity != player.preview and is_instance_valid(entity):
 			entity.free()
 
 func preview_enemy_turns(target):
 	await clear_preview()
 	player.preview.visible = true
-	preview_board = []
-	preview_board.resize(Globals.BOARD_SIZE[0])
 	for i in range(Globals.BOARD_SIZE[0]):
-		var preview_col = []
-		preview_col.resize(Globals.BOARD_SIZE[1])
-		preview_board[i] = preview_col
+		for j in range(Globals.BOARD_SIZE[1]):
+			preview_board[i][j] = null
 	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
 	preview_entities = [player.preview]
 	for i in range(Globals.BOARD_SIZE[0]):
-		var col = []
 		for j in range(Globals.BOARD_SIZE[1]):
 			var node
 			if board[i][j] != null and board[i][j] != player:
@@ -255,6 +289,7 @@ func preview_enemy_turns(target):
 	while len(enemy_stack) > 0:
 		var enemy = enemy_stack.pop_back()
 		await take_turn(enemy, preview_board, player.preview)
+	is_previewing = false
 		#clear_dead(preview_)
 	
 func dup_board(board):
@@ -281,7 +316,7 @@ func damage(target, amount, board):
 	target.hp -= amount
 	if target.hp > 0:
 		var health = target.get_node("Path2D/PathFollow2D/Sprite2D/HealthDisplay").reduce_health(amount)
-	else:
+	elif target != player.preview:
 		board[target.board_position[0]][target.board_position[1]] = null
 		target.destroy()
 
