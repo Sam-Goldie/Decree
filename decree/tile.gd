@@ -4,10 +4,12 @@ var board_position : Vector2i
 
 signal click
 signal right_click
+signal is_hovering
 
 func _process(delta):
 	if is_hovered():
 		$TileSelector.self_modulate.a = 1
+		is_hovering.emit()
 	else:
 		$TileSelector.self_modulate.a = 0
 
