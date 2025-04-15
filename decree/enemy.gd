@@ -9,11 +9,12 @@ extends Node2D
 @export var is_enemy : bool
 @export var enemies : Array
 @export var type : String
+@export var preview : Node2D
 
 func _ready():
 	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)
 
-func initialize(board_position, hp, damage, has_moved, speed, range, is_enemy, enemies, type):
+func initialize(board_position, hp, damage, has_moved, speed, range, is_enemy, enemies, type, preview):
 	self.board_position = board_position
 	self.hp = hp
 	self.damage = damage
@@ -23,6 +24,7 @@ func initialize(board_position, hp, damage, has_moved, speed, range, is_enemy, e
 	self.is_enemy = is_enemy
 	self.enemies = enemies
 	self.type = type
+	self.preview = preview
 	
 func find_targets(board, player):
 	var x = self.board_position[0]

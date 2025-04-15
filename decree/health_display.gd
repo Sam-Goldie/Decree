@@ -12,6 +12,8 @@ func initiate(hp):
 
 func reduce_health(amount):
 	var pip_count = len(pips)
+	if pip_count == 0:
+		return
 	for i in range(amount):
 		pips[pip_count - 1 - i].free()
 		pips.remove_at(pip_count - 1 - i)
