@@ -1,5 +1,8 @@
 extends Node
 
+var player_scene = preload("res://Player.tscn")
+
+var PLAYER := player_scene.instantiate()
 var HEALTH_PATH := "Navigation/%s/Path2D/PathFollow2D/Sprite2D/Label"
 var TURN_ORDER_PATH := "Path2D/PathFollow2D/Sprite2D/TurnOrder"
 var ROCK_COORDS := Rect2(96, 32, 16, 16)

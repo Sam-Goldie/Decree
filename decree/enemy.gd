@@ -1,4 +1,5 @@
 extends Node2D
+var move_pattern_scene = preload("res://move_patterns.gd")
 
 @export var board_position : Vector2i
 @export var hp : int
@@ -10,6 +11,7 @@ extends Node2D
 @export var enemies : Array
 @export var type : String
 @export var preview : Node2D
+var move_patterns = move_pattern_scene.new()
 
 func _ready():
 	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)
@@ -38,6 +40,9 @@ func find_targets(board, player):
 	elif y > 0 and board[x][y-1] == player:
 		return player
 	return null
+
+func plan_move(board, player):
+	return move_patterns.shift_chase(self, player.board_position)
 
 func destroy():
 	self.queue_free()

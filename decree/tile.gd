@@ -1,6 +1,7 @@
 extends Button
 
 var board_position : Vector2i
+var currently_hovered = false
 
 signal click
 signal right_click
@@ -9,8 +10,11 @@ signal is_hovering
 func _process(delta):
 	if is_hovered():
 		$TileSelector.self_modulate.a = 1
-		is_hovering.emit()
+		if !currently_hovered:
+			is_hovering.emit()
+			currently_hovered = true
 	else:
+		currently_hovered = false
 		$TileSelector.self_modulate.a = 0
 
 func _input(event):

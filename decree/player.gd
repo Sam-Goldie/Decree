@@ -9,6 +9,7 @@ var range : int
 var speed : int
 var is_enemy : bool
 var preview : Node2D
+var tween : Tween
 
 signal move(entity, target)
 signal attack(entity, target)
