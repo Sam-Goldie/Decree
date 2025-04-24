@@ -18,7 +18,7 @@ var player_start = Vector2i(2,2)
 @onready
 var is_player_turn = true
 @onready
-var warrior_count = 1
+var warrior_count = 3
 @onready
 var archer_count = 0
 @onready
@@ -250,16 +250,20 @@ func take_enemy_turns(tween):
 			#_on_player_win()
 
 func clear_preview():
-	await clear_dead(preview_entities)
+	await clear_dead([preview_entities, running_tweens, preview_stack])
+	for active_tween in running_tweens:
+		active_tween.kill()
 	for i in range(Globals.BOARD_SIZE[0]):
 		for j in range(Globals.BOARD_SIZE[1]):
 			preview_board[i][j] = null
 	for enemy in enemies:
 		var preview = enemy.preview
-		preview.visible = false
-		preview.position = enemy.position
-		preview.board_position = enemy.board_position
-		preview_board[preview.board_position[0]][preview.board_position[1]] = preview
+		if is_instance_valid(preview):
+			preview.visible = false
+			preview.position = enemy.position
+			preview.board_position = enemy.board_position
+			preview_board[preview.board_position[0]][preview.board_position[1]] = preview
+	preview_stack = []
 		
 	#player.preview.visible = false
 	#for col in preview_board:
@@ -284,26 +288,14 @@ func preview_enemy_turns(target, tween):
 		#await take_turn(preview_board, player.preview, tween, preview_stack)
 	await take_turn(preview_board, player.preview, preview_stack)
 
-func clear_dead(entity_list):
-	var dead_idx = []
-	for i in range(len(entity_list)):
-		if entity_list[i] == null or entity_list[i].is_queued_for_deletion():
-			dead_idx.append(i)
-	for i in range(len(dead_idx)):
-		var dead_entity = entity_list.pop_at(dead_idx[-i-1])
-		
-	dead_idx = []
-	for i in range(len(rocks)):
-		if rocks[i] == null or rocks[i].is_queued_for_deletion():
-			dead_idx.append(i)
-	for i in range(len(dead_idx)):
-		rocks.remove_at(dead_idx[-i-1])
-	#dead_idx = []
-	#for i in range(len(preview_entities)):
-		#if !is_instance_valid(preview_entities[i]):
-			#dead_idx.append(i)
-	#for i in range(len(dead_idx)):
-		#preview_entities.remove_at(dead_idx[-i-1])
+func clear_dead(entity_lists):
+	for list in entity_lists:
+		var dead_idx = []
+		for i in range(len(list)):
+			if list[i] == null or list[i].is_queued_for_deletion():
+				dead_idx.append(i)
+		for i in range(len(dead_idx)):
+			list.remove_at(dead_idx[-i-1])
 
 func damage(target, amount, board):
 	if !is_instance_valid(target) or target == null:
@@ -317,7 +309,6 @@ func damage(target, amount, board):
 
 func move(board, entity, target):
 	var tween = create_tween()
-	hide_preview()
 	var did_move = false
 	var prev_position = entity.board_position
 	if entity == player:
@@ -325,8 +316,6 @@ func move(board, entity, target):
 	if !is_valid_position(target):
 		return did_move
 	if board[target[0]][target[1]] == null:
-		for active_tween in running_tweens:
-			active_tween.kill()
 		var new_pos = Vector2(target * 16)
 		#entity.position = target * 16
 		if !entity.preview:
@@ -388,6 +377,7 @@ func attack(entity, target, board):
 		if target != player.preview:
 			damage(target, entity.damage, board)
 	take_turn(board, target, enemy_stack if entity.preview else preview_stack)
+
 func animate_attack(entity_pos, target_pos, anim_player):
 	var offset = entity_pos - target_pos
 	if abs(offset[0]) > abs(offset[1]):
@@ -561,7 +551,7 @@ func _on_tile_hover(tile):
 	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
 	if !is_valid_position(board_pos):
 		current_tile = Vector2i(-1,-1)
-		tween.stop()
+		#tween.stop()
 		return
 	#await clear_preview()
 	var target = preview_board[board_pos[0]][board_pos[1]]
@@ -569,7 +559,7 @@ func _on_tile_hover(tile):
 		current_tile = Vector2i(-1,-1)
 		hide_turn_order()
 		hide_preview()
-		tween.stop()
+		#tween.stop()
 		return
 	current_tile = board_pos
 	show_preview()
@@ -623,7 +613,7 @@ func _on_tile_hover(tile):
 		hide_preview()
 
 func show_turn_order():
-	clear_dead(enemies)
+	clear_dead([enemies, rocks])
 	for i in range(len(enemies)):
 		var enemy = enemies[i]
 		var turn_display = enemy.get_node(Globals.TURN_ORDER_PATH)
