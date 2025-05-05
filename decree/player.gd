@@ -1,7 +1,6 @@
 extends Node2D
 
 var board_position : Vector2i
-var prev_board_position : Vector2i
 var hp : int
 var damage : int
 var has_moved : bool
@@ -15,6 +14,15 @@ signal move(entity, target)
 signal attack(entity, target)
 signal end_turn
 signal lose
+
+func initialize(board_position, hp, has_moved, speed, range, is_enemy, preview):
+	self.board_position = board_position
+	self.hp = hp
+	self.has_moved = has_moved
+	self.speed = speed
+	self.range = range
+	self.is_enemy = is_enemy
+	self.preview = preview
 
 func _ready():
 	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)

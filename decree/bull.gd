@@ -1,15 +1,15 @@
 extends Node2D
 
-@export var board_position : Vector2i
-@export var hp : int
-@export var damage : int
-@export var has_moved : bool
-@export var speed : int
-@export var range : int
-@export var is_enemy : bool
-@export var enemies : Array
-@export var type : String
-@export var direction : String
+var board_position : Vector2i
+var hp : int
+var damage : int
+var has_moved : bool
+var speed : int
+var range : int
+var is_enemy : bool
+var enemies : Array
+var type : String
+var direction : String
 
 func _ready():
 	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)

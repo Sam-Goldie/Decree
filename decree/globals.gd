@@ -12,6 +12,8 @@ var PREVIEW_BOARD := []
 var TERRAIN := []
 var GRID := AStarGrid2D.new()
 var ENEMIES := AStarGrid2D.new()
+var RUNNING_TWEENS := []
+var IS_PLAYER_TURN := true
 
 #var MATRIX_DEEP_EQUALS = func(a, b):
 	#if a == b:

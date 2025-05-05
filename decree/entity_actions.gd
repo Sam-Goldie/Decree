@@ -20,7 +20,7 @@ func is_in_range(position1, position2, range):
 	else:
 		return false 
 
-func move(board, entity, target, fake_tween):
+func move(board, entity, target):
 	var tween = $Navigation.create_tween()
 	#var tween = create_tween()
 	#var did_move = false
@@ -96,7 +96,7 @@ func move(board, entity, target, fake_tween):
 		#did_move.emit()
 		
 
-func attack(entity, target, board, player, stack, tween):
+func attack(entity, target, board, player, stack):
 	var entity_pos = entity.board_position
 	var target_pos = target.board_position
 	if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
@@ -108,7 +108,7 @@ func attack(entity, target, board, player, stack, tween):
 			await animate_attack(entity.board_position, target.board_position, anim_player)
 		if target != player.preview:
 			damage(target, entity.damage, board, player)
-			turn_finished.emit(board, player, tween, stack)
+			turn_finished.emit(board, player, stack)
 
 func damage(target, amount, board, player):
 	if !is_instance_valid(target) or target == null:
@@ -142,4 +142,4 @@ func push(entity, offset, distance, board, tween):
 		var dest = entity.board_position + offset
 		if is_valid_position(dest) and board[dest[0]][dest[1]] != null:
 			break
-		await move(board, entity, dest, tween)
+		await move(board, entity, dest)
