@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://c4drp01fqj2e7" path="res://Enemy.tscn" id="1_cikh8"]
 [ext_resource type="Script" path="res://bull.gd" id="2_yiyht"]
-[ext_resource type="Texture2D" uid="uid://c06dq8cd8knx7" path="res://bull.png" id="3_glsv7"]
+[ext_resource type="Texture2D" uid="uid://c68shbnyucmex" path="res://Bull2.png" id="3_qoqd7"]
 
 [sub_resource type="Curve2D" id="Curve2D_rt3q5"]
 resource_local_to_scene = true
@@ -33,4 +33,4 @@ curve = SubResource("Curve2D_rt3q5")
 
 [node name="Sprite2D" parent="Path2D/PathFollow2D" index="0"]
 material = SubResource("ShaderMaterial_4un0i")
-texture = ExtResource("3_glsv7")
+texture = ExtResource("3_qoqd7")

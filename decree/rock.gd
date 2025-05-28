@@ -22,4 +22,5 @@ func initialize(board_position, hp, is_enemy, type, preview):
 func destroy():
 	if preview:
 		destroy_rock.emit()
+		self.preview.queue_free()
 		self.queue_free()
