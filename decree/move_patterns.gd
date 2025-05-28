@@ -1,4 +1,4 @@
-class_name MovePatterns
+extends Node2D
 
 var board
 
@@ -50,7 +50,7 @@ func shift_chase_axis(entity, target):
 	else:
 		return entity.board_position + Vector2i(-1,0)
 
-func charge(entity):
+func charge(entity, target_player, board):
 	var dest = entity.board_position
 	var offset
 	match entity.direction:

@@ -9,10 +9,13 @@ resource_local_to_scene = true
 atlas = ExtResource("2_6ss7s")
 region = Rect2(48, 0, 16, 16)
 
-[node name="Tile" type="Button"]
+[node name="Tile" type="Control"]
 self_modulate = Color(1, 1, 1, 0)
+layout_mode = 3
+anchors_preset = 0
 offset_right = 16.0
 offset_bottom = 16.0
+mouse_force_pass_scroll_events = false
 script = ExtResource("1_vd0qm")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
@@ -29,3 +32,11 @@ z_index = 2
 scale = Vector2(0.941176, 1)
 color = Color(0.580392, 0.72549, 0.862745, 1)
 polygon = PackedVector2Array(17, 0, 0, 0, 0, 16, 17, 16)
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

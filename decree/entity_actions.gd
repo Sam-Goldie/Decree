@@ -1,98 +1,15 @@
 extends Node2D
 
 signal turn_finished
+signal did_move
 
-var move_pattern_scene = preload("res://move_patterns.gd")
-var entity_actions_scene = preload("res://entity_actions.gd")
-
-var board_position : Vector2i
-var hp : int
-var damage : int
-var has_moved : bool
-var speed : int
-var range : int
-var is_enemy : bool
-var enemies : Array
-var type : String
-var preview : Node2D
-var move_patterns = move_pattern_scene.new()
-var running_tweens = Globals.RUNNING_TWEENS
-var entity_actions = entity_actions_scene.new()
-var active_turns = Globals.ACTIVE_TURNS
-var rocks = Globals.ROCKS
-var player = Globals.PLAYER
-var bulls = Globals.BULLS
 var preview_board = Globals.PREVIEW_BOARD
-
-func _ready():
-	var hp_display = str(hp)
-	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)
-
-func initialize(board_position, hp, damage, has_moved, speed, range, is_enemy, enemies, type, preview):
-	self.board_position = board_position
-	self.hp = hp
-	self.damage = damage
-	self.has_moved = has_moved
-	self.speed = speed
-	self.range = range
-	self.is_enemy = is_enemy
-	self.enemies = enemies
-	self.type = type
-	self.preview = preview
-
-func plan_move(board, player):
-	return move_patterns.shift_chase_axis(self, player.board_position)
-
-func take_turn(board, target_player, stack, board_pos):
-	var dest = plan_move(board, target_player)
-	var target
-	if dest != null and dest != board_position:
-		has_moved = true
-		if board[dest[0]][dest[1]] == null:
-			await move(board, self, dest, stack, board_pos)
-		else:
-			target = board[dest[0]][dest[1]]
-	if target == null:
-		target = find_targets(board, target_player)
-	if target != null:
-		has_moved = true
-		await attack(self, target, board, target_player, stack)
-	turn_finished.emit()
-
-func find_targets(board, player):
-	var player_pos = player.board_position
-	var target = board_position
-	var attack_axis
-	if board_position[0] != player_pos[0] and board_position[1] != player_pos[1]:
-		return null
-	elif board_position[0] == player_pos[0]:
-		attack_axis = 1
-	else:
-		attack_axis = 0
-	match attack_axis:
-		0:
-			while target[0] > player_pos[0]:
-				target[0] -= 1
-				if board[target[0]][target[1]] != null:
-					return board[target[0]][target[1]]
-			while target[0] < player_pos[0]:
-				target[0] += 1
-				if board[target[0]][target[1]] != null:
-					return board[target[0]][target[1]]
-		1:
-			while target[1] > player_pos[1]:
-				target[1] -= 1
-				if board[target[0]][target[1]] != null:
-					return board[target[0]][target[1]]
-			while target[1] < player_pos[1]:
-				target[1] += 1
-				if board[target[0]][target[1]] != null:
-					return board[target[0]][target[1]]
-
-func destroy():
-	if preview:
-		preview.queue_free()
-		self.queue_free()
+var player = Globals.PLAYER
+var enemies = Globals.ENEMIES
+var bulls = Globals.BULLS
+var running_tweens = Globals.RUNNING_TWEENS
+var rocks = Globals.ROCKS
+var active_turns = Globals.ACTIVE_TURNS
 
 func is_valid_position(board_position):
 	if board_position[0] < 0 or board_position[0] > Globals.BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > Globals.BOARD_SIZE[1] - 1:
@@ -119,9 +36,9 @@ func move(board, entity, target, stack, board_pos):
 	if board[target[0]][target[1]] == null:
 		var new_pos = Vector2(target * 16)
 		if !entity.preview:
-			entity_actions.show_preview()
+			show_preview()
 		else:
-			entity_actions.hide_preview()
+			hide_preview()
 		running_tweens.append(tween)
 		tween.tween_property(entity, "position", new_pos, 0.2)
 		if tween.is_running():
@@ -162,6 +79,30 @@ func move(board, entity, target, stack, board_pos):
 					bull.direction = "up"
 				stack.append(bull)
 	return
+
+func show_preview():
+	player.preview.visible = true
+	for enemy in enemies:
+		if is_instance_valid(enemy) and is_instance_valid(enemy.preview):
+			enemy.preview.visible = true
+	for bull in bulls:
+		if is_instance_valid(bull) and is_instance_valid(bull.preview):
+			bull.preview.visible = true
+	for rock in rocks:
+		if is_instance_valid(rock) and is_instance_valid(rock.preview):
+			rock.preview.visible = true
+
+func hide_preview():
+	player.preview.visible = false
+	for enemy in enemies:
+		if is_instance_valid(enemy) and is_instance_valid(enemy.preview):
+			enemy.preview.visible = false
+	for bull in bulls:
+		if is_instance_valid(bull) and is_instance_valid(bull.preview):
+			bull.preview.visible = false
+	for rock in rocks:
+		if is_instance_valid(rock) and is_instance_valid(rock.preview):
+			rock.preview.visible = false
 			
 #func move(board, entity, target):
 	#var tween = $Navigation.create_tween()
@@ -250,8 +191,18 @@ func attack(entity, target, board, player, stack):
 		if anim_player != null:
 			await animate_attack(entity.board_position, target.board_position, anim_player)
 		if target != player.preview:
-			entity_actions.damage(target, entity.damage, board, player)
-			turn_finished.emit()
+			damage(target, entity.damage, board, player)
+			turn_finished.emit(board, player, stack)
+
+func damage(target, amount, board, player):
+	if !is_instance_valid(target) or target == null:
+		return
+	target.hp -= amount
+	if target.hp > 0:
+		var health = target.get_node("Path2D/PathFollow2D/Sprite2D/HealthDisplay").reduce_health(amount)
+	elif target != player.preview:
+		board[target.board_position[0]][target.board_position[1]] = null
+		target.destroy()
 
 func animate_attack(entity_pos, target_pos, anim_player):
 	var offset = entity_pos - target_pos
