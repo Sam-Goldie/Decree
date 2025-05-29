@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8u7f41bb33hq"]
+
+[ext_resource type="Script" path="res://move_patterns.gd" id="1_1oa2j"]
+
+[node name="ActionSpace" type="Node2D"]
+script = ExtResource("1_1oa2j")

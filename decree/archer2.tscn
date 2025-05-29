@@ -1,0 +1,35 @@
+[gd_scene load_steps=7 format=3 uid="uid://cvartfstwbtwq"]
+
+[ext_resource type="Script" path="res://archer.gd" id="1_3ikb7"]
+[ext_resource type="PackedScene" uid="uid://drxtkedfmor55" path="res://entity_animator.tscn" id="1_485vm"]
+[ext_resource type="Script" path="res://path_follow_2d.gd" id="2_vh84e"]
+[ext_resource type="Texture2D" uid="uid://d160d6efqvatp" path="res://Archer.png" id="3_k565i"]
+[ext_resource type="Script" path="res://health_display.gd" id="3_ns4rq"]
+
+[sub_resource type="Curve2D" id="Curve2D_1226t"]
+
+[node name="Archer" type="Node2D"]
+script = ExtResource("1_3ikb7")
+
+[node name="Path2D" type="Path2D" parent="."]
+curve = SubResource("Curve2D_1226t")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="Path2D"]
+script = ExtResource("2_vh84e")
+
+[node name="Sprite2D" type="Sprite2D" parent="Path2D/PathFollow2D"]
+texture = ExtResource("3_k565i")
+offset = Vector2(8, 8)
+
+[node name="HealthDisplay" type="Control" parent="Path2D/PathFollow2D/Sprite2D"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("3_ns4rq")
+
+[node name="TurnOrder" type="Label" parent="Path2D/PathFollow2D/Sprite2D"]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="AnimationPlayer" parent="." instance=ExtResource("1_485vm")]

@@ -25,5 +25,8 @@ func _input(event):
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			right_click.emit()
 	# just made this change
-	elif event is InputEventMouseMotion and Vector2i(get_global_mouse_position() / 16) == board_position:
+	elif !currently_hovered and event is InputEventMouseMotion and Vector2i(get_global_mouse_position() / 16) == board_position:
+		currently_hovered = true
 		is_hovering.emit()
+	else:
+		currently_hovered = false
