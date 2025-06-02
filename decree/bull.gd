@@ -93,7 +93,6 @@ func attack(entity, target, board, player, stack):
 	var entity_pos = entity.board_position
 	var target_pos = target.board_position
 	if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
-		turn_finished.emit(stack)
 		return
 	#player.has_moved = false
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:

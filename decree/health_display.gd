@@ -3,6 +3,7 @@ extends Control
 var pip_scene = preload("res://pip.tscn")
 var pips = []
 
+# where are these pips I see coming from exactly?
 func initiate(hp):
 	for i in range(hp):
 		var new_pip = pip_scene.instantiate()

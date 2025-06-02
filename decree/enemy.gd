@@ -226,7 +226,6 @@ func attack(entity, target, board, player, stack):
 	var entity_pos = entity.board_position
 	var target_pos = target.board_position
 	if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
-		turn_finished.emit(stack)
 		return
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
 		var anim_player = entity.get_node("AnimationPlayer")
@@ -234,7 +233,6 @@ func attack(entity, target, board, player, stack):
 			await animate_attack(entity.board_position, target.board_position, anim_player)
 		if target != player.preview:
 			entity_actions.damage(target, entity.damage, board, player)
-			turn_finished.emit()
 
 func animate_attack(entity_pos, target_pos, anim_player):
 	var offset = entity_pos - target_pos

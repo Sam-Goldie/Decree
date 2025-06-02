@@ -18,7 +18,7 @@ var player_start = Vector2i(2,2)
 @onready
 var warrior_count = 2
 @onready
-var archer_count = 3
+var archer_count = 1
 @onready
 var bull_count = 1
 @onready
@@ -282,6 +282,11 @@ func clear_preview():
 	#for i in range(Globals.BOARD_SIZE[0]):
 		#for j in range(Globals.BOARD_SIZE[1]):
 			#preview_board[i][j] = null
+	reset_health(player.preview, player.hp)
+	player.preview.visible = false
+	player.preview.position = player.position
+	player.preview.board_position = player.board_position
+	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
 	for enemy in enemies:
 		var preview = enemy.preview
 		if is_instance_valid(preview):
