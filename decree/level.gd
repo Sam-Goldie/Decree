@@ -1,5 +1,7 @@
 extends Node2D
 
+#RESET HEALTH IS CAUSING THE PROBLEM WITH DAMAGE NOT DISPLAYING. IT FIRES AT WRONG TIME
+
 var player_scene = preload("res://Player.tscn")
 var enemy_scene = preload("res://Enemy.tscn")
 var archer_scene = preload("res://archer2.tscn")
@@ -234,6 +236,7 @@ func hide_preview():
 #why is there a double turn by the enemy if I move just wrong
 func take_next_turn(board, target_player, stack, board_pos):
 	#await clear_dead([preview_entities, running_tweens, preview_stack, enemies, running_tweens, bulls])
+	#await clear_preview()
 	if len(stack) == 0:
 		#for tween in running_tweens:
 			#if tween.is_running():
@@ -273,6 +276,7 @@ func reset_health(entity, new_hp):
 	entity.get_node("Path2D/PathFollow2D/Sprite2D/HealthDisplay").pips = []
 	entity.get_node("Path2D/PathFollow2D/Sprite2D/HealthDisplay").initiate(new_hp)
 
+
 func clear_preview():
 	for active_tween in running_tweens:
 		#if active_tween.is_running():
@@ -282,6 +286,7 @@ func clear_preview():
 	#for i in range(Globals.BOARD_SIZE[0]):
 		#for j in range(Globals.BOARD_SIZE[1]):
 			#preview_board[i][j] = null
+	#reset_health(player.preview, player.hp)
 	reset_health(player.preview, player.hp)
 	player.preview.visible = false
 	player.preview.position = player.position
@@ -314,13 +319,6 @@ func clear_preview():
 	var state = [preview_stack, running_tweens]
 	for element in state:
 		element.clear()
-#func preview_enemy_turns(target, tween):
-	#for enemy in enemies:
-		#if is_instance_valid(enemy) and enemy != null and is_instance_valid(enemy.preview):
-			#enemy.preview.has_moved = false
-			#preview_stack.insert(0, enemy.preview)
-	#show_preview()
-	#await take_turn(preview_board, player.preview, preview_stack)
 
 func clear_dead(entity_lists):
 	for list in entity_lists:
@@ -521,8 +519,6 @@ func push(entity, offset, distance, board, stack, board_pos):
 #why are some tiles randomly not firing mouse entered?
 #some sort of disagreement about state between actual tiles and the state variables
 func _on_tile_mouse_entered(board_pos):
-	if board_pos == Vector2i(1,3):
-		print("hello")
 	var pos = get_viewport().get_mouse_position()
 	if !Globals.IS_PLAYER_TURN or board_pos == current_tile:
 		return
@@ -530,6 +526,7 @@ func _on_tile_mouse_entered(board_pos):
 	player.preview.position = player.position
 	player.preview.board_position = player.board_position
 	await clear_preview()
+	entity_actions.hide_preview()
 	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
 	if active_turns[board_pos[0]][board_pos[1]]:
 		return
