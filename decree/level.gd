@@ -233,15 +233,8 @@ func hide_preview():
 		if is_instance_valid(rock) and is_instance_valid(rock.preview):
 			rock.preview.visible = false
 
-#sometimes this fires, sometimes not. What da heck?
-#why is there a double turn by the enemy if I move just wrong
 func take_next_turn(board, target_player, stack, board_pos):
-	#await clear_dead([preview_entities, running_tweens, preview_stack, enemies, running_tweens, bulls])
-	#await clear_preview()
 	if len(stack) == 0:
-		#for tween in running_tweens:
-			#if tween.is_running():
-				#await tween.finished
 		Globals.IS_PLAYER_TURN = true
 		return
 	var enemy = stack.pop_back()
@@ -249,22 +242,6 @@ func take_next_turn(board, target_player, stack, board_pos):
 		take_next_turn(board, target_player, stack, board_pos)
 		return
 	enemy.take_turn(board, target_player, stack, board_pos)
-	#var dest = enemy.plan_move(board, target_player)
-	#var target
-	#if dest != null and dest != enemy.board_position:
-		#enemy.has_moved = true
-		#if board[dest[0]][dest[1]] == null:
-			#await enemy.move(board, enemy, dest, stack)
-		#else:
-			#target = board[dest[0]][dest[1]]
-	#if enemy.type == "archer":
-		#print("hello")
-	#if target == null and is_instance_valid(enemy):
-		#target = enemy.find_targets(board, target_player)
-	#if target != null and is_instance_valid(enemy):
-		#enemy.has_moved = true
-		#await attack(enemy, target, board, board_pos)
-	#take_next_turn(board, target_player, stack, board_pos)
 			
 func queue_enemy_turns(stack, enemies):
 	for enemy in enemies:
@@ -279,14 +256,8 @@ func reset_health(entity, new_hp):
 
 func clear_preview():
 	for active_tween in running_tweens:
-		#if active_tween.is_running():
-			#await active_tween.finished
 		active_tween.kill()
 	await clear_dead([preview_entities, preview_stack, enemies, running_tweens, rocks, bulls, active_turns, preview_board])
-	#for i in range(Globals.BOARD_SIZE[0]):
-		#for j in range(Globals.BOARD_SIZE[1]):
-			#preview_board[i][j] = null
-	#reset_health(player.preview, player.hp)
 	reset_health(player.preview, player.hp)
 	player.preview.visible = false
 	player.preview.position = player.position
@@ -351,7 +322,6 @@ func damage(target, amount, board):
 		board[target.board_position[0]][target.board_position[1]] = null
 		target.destroy()
 
-#read the damn debugger
 func move(board, entity, target, stack, board_pos):
 	var tween = create_tween()
 	active_turns[board_pos[0]][board_pos[1]] = tween
@@ -369,8 +339,6 @@ func move(board, entity, target, stack, board_pos):
 		running_tweens.append(tween)
 		tween.tween_property(entity, "position", new_pos, 0.2)
 		await tween.finished
-		tween.stop()
-		#how could target have changed from the tweening?
 		board[prev_position[0]][prev_position[1]] = null
 		board[target[0]][target[1]] = entity
 		if !is_instance_valid(entity):
@@ -405,22 +373,18 @@ func move(board, entity, target, stack, board_pos):
 				stack.append(bull)
 	return
 	
-#why double moveeeee
 func attack(entity, target, board, board_pos, tween):
 	var entity_pos = entity.board_position
 	var target_pos = target.board_position
 	if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
 		take_next_turn(board, target, enemy_stack if entity.preview else preview_stack, board_pos)
 		return
-	#player.has_moved = false
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
 		var anim_player = entity.get_node("AnimationPlayer")
 		if anim_player != null:
 			await animate_attack(entity.board_position, target.board_position, anim_player, board_pos)
-			#target = player if entity.preview else player.preview
 		if target != player.preview:
 			damage(target, entity.damage, board)
-	#take_turn(board, player if entity.preview else player.preview, enemy_stack if entity.preview else preview_stack, board_pos)
 
 func animate_attack(entity_pos, target_pos, anim_player, board_pos):
 	var offset = entity_pos - target_pos
@@ -483,10 +447,7 @@ func _on_player_win():
 
 func _on_entity_move():
 	return
-	
-#func _on_turn_finished(board, target_player, tween, stack):
-	#take_turn(board, target_player, stack, board_pos)
-	
+
 func _restart_game():
 	get_tree().reload_current_scene()
 
@@ -520,8 +481,6 @@ func push(entity, offset, distance, board, stack, board_pos):
 			break
 		await move(board, entity, dest, stack, board_pos)
 
-#why are some tiles randomly not firing mouse entered?
-#some sort of disagreement about state between actual tiles and the state variables
 func _on_tile_mouse_entered(board_pos):
 	var pos = get_viewport().get_mouse_position()
 	if !Globals.IS_PLAYER_TURN or board_pos == current_tile:
@@ -535,7 +494,6 @@ func _on_tile_mouse_entered(board_pos):
 	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
 	if active_turns[board_pos[0]][board_pos[1]]:
 		return
-	#active_turns[str(board_pos)] = true
 	if !is_valid_position(board_pos):
 		current_tile = Vector2i(-1,-1)
 		return
@@ -586,7 +544,6 @@ func _on_tile_mouse_entered(board_pos):
 		hide_preview()
 		clear_preview()
 	active_turns[board_pos[0]][board_pos[1]] = null
-
 
 func _on_tile_pressed(board_pos):
 	hide_preview()

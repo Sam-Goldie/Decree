@@ -60,18 +60,6 @@ func find_targets(board, _player):
 	var target_pos = self.board_position + offset
 	if is_valid_position(target_pos) and board[target_pos[0]][target_pos[1]] != null:
 		return board[target_pos[0]][target_pos[1]]
-	#var x = board_position[0]
-	#var y = board_position[1]
-	#if x != player.board_position[0] and y != player.board_position[1]:
-		#return null
-	#if x < player.board_position[0]:
-		#return board[x+1][y]
-	#elif x > player.board_position[0]:
-		#return board[x-1][y]
-	#elif y < player.board_position[1]:
-		#return board[x][y+1]
-	#else:
-		#return board[x][y-1]
 
 func take_turn(board, target_player, stack, board_pos):
 	var dest = plan_move(board, target_player)
@@ -118,12 +106,9 @@ func animate_attack(entity_pos, target_pos, anim_player):
 	await anim_player.animation_finished
 
 func move(board, entity, target, stack, board_pos):
-	#tween.tween_callback(entity.find_targets)
 	var tween = create_tween()
 	active_turns[board_pos[0]][board_pos[1]] = tween
 	var prev_position = entity.board_position
-	#if entity == player:
-		#remove_target_highlights(prev_position)
 	if !is_valid_position(target):
 		return
 	if board[target[0]][target[1]] == null:
@@ -137,8 +122,6 @@ func move(board, entity, target, stack, board_pos):
 		if tween.is_running():
 			await tween.finished
 		print(tween.is_running())
-		#tween never finishes
-		#how could target have changed from the tweening?
 		board[prev_position[0]][prev_position[1]] = null
 		board[target[0]][target[1]] = entity
 		if !is_instance_valid(entity):

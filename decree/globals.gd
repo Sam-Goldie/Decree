@@ -17,15 +17,3 @@ var IS_PLAYER_TURN := true
 var BULLS := []
 var ROCKS := []
 var ACTIVE_TURNS := []
-
-#var MATRIX_DEEP_EQUALS = func(a, b):
-	#if a == b:
-		#return true
-	#if len(a) != len(b):
-		#return false
-	#for i in range(len(a)):
-		#var a_col = a[i]
-		#var b_col = b[i]
-		#if len(a_col)
-		#for j in range(len(a_col)):
-			

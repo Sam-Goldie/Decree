@@ -54,7 +54,6 @@ func hide_preview():
 			rock.preview.visible = false
 			rock.visible = true
 
-# where are the player's health pips?
 func damage(target, amount, board, player):
 	if !is_instance_valid(target) or target == null:
 		return

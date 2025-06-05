@@ -3,7 +3,6 @@ extends Control
 var pip_scene = preload("res://pip.tscn")
 var pips = []
 
-# where are these pips I see coming from exactly?
 func initiate(hp):
 	for node in get_children():
 		remove_child(node)
