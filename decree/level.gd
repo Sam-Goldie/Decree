@@ -60,6 +60,7 @@ var active_turns = Globals.ACTIVE_TURNS
 #current problem: some tiles aren't firing off mouse entered signals (they appear to exist though)
 
 func _ready():
+	Globals.IS_PLAYER_TURN = true
 	#entity_actions.connect("show_preview", show_preview)
 	entity_actions.connect("did_move", _on_entity_move)
 	#entity_actions.connect("turn_finished", _on_turn_finished)
