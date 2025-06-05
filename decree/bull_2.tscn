@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://dtrvvd6ndxgrt"]
+[gd_scene load_steps=8 format=3 uid="uid://dtrvvd6ndxgrt"]
 
 [ext_resource type="Script" path="res://bull.gd" id="1_1gh1d"]
 [ext_resource type="Script" path="res://path_follow_2d.gd" id="2_sauw8"]
 [ext_resource type="Texture2D" uid="uid://c06dq8cd8knx7" path="res://bull.png" id="3_lnb27"]
 [ext_resource type="Script" path="res://health_display.gd" id="3_tphse"]
+[ext_resource type="PackedScene" uid="uid://gnu3kuytcu5w" path="res://crossout.tscn" id="6_x1rpi"]
 [ext_resource type="PackedScene" uid="uid://drxtkedfmor55" path="res://entity_animator.tscn" id="8_nwo4s"]
 
 [sub_resource type="Curve2D" id="Curve2D_igqy1"]
@@ -34,3 +35,5 @@ offset_right = 40.0
 offset_bottom = 23.0
 
 [node name="AnimationPlayer" parent="." instance=ExtResource("8_nwo4s")]
+
+[node name="Crossout" parent="." instance=ExtResource("6_x1rpi")]

@@ -39,7 +39,8 @@ func show_preview():
 			rock.visible = false
 
 func hide_preview():
-	player.preview.visible = false
+	if player != null:
+		player.preview.visible = false
 	for enemy in enemies:
 		if is_instance_valid(enemy) and is_instance_valid(enemy.preview):
 			enemy.preview.visible = false

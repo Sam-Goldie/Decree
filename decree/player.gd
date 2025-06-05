@@ -37,3 +37,6 @@ func _on_level_confirm_attack():
 func destroy():
 	if preview != null:
 		lose.emit()
+	else:
+		#crossout is not appearing. what da heck
+		get_node("Crossout").visible = true

@@ -24,3 +24,5 @@ func destroy():
 		destroy_rock.emit()
 		self.preview.queue_free()
 		self.queue_free()
+	else:
+		get_node("Crossout").visible = true

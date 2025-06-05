@@ -93,6 +93,8 @@ func destroy():
 	if preview:
 		preview.queue_free()
 		self.queue_free()
+	else:
+		get_node("Crossout").visible = true
 
 func is_valid_position(board_position):
 	if board_position[0] < 0 or board_position[0] > Globals.BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > Globals.BOARD_SIZE[1] - 1:

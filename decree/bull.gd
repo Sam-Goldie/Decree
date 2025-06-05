@@ -186,3 +186,5 @@ func destroy():
 	if preview:
 		preview.queue_free()
 		self.queue_free()
+	else:
+		get_node("Crossout").visible = true

@@ -276,7 +276,6 @@ func reset_health(entity, new_hp):
 	entity.get_node("Path2D/PathFollow2D/Sprite2D/HealthDisplay").pips = []
 	entity.get_node("Path2D/PathFollow2D/Sprite2D/HealthDisplay").initiate(new_hp)
 
-
 func clear_preview():
 	for active_tween in running_tweens:
 		#if active_tween.is_running():
@@ -292,10 +291,12 @@ func clear_preview():
 	player.preview.position = player.position
 	player.preview.board_position = player.board_position
 	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
+	player.preview.get_node("Crossout").visible = false
 	for enemy in enemies:
 		var preview = enemy.preview
 		if is_instance_valid(preview):
 			reset_health(preview, enemy.hp)
+			preview.get_node("Crossout").visible = false
 			preview.visible = false
 			preview.position = enemy.position
 			preview.board_position = enemy.board_position
@@ -304,6 +305,7 @@ func clear_preview():
 		var preview = rock.preview
 		if is_instance_valid(preview):
 			reset_health(preview, rock.hp)
+			preview.get_node("Crossout").visible = false
 			preview.visible = false
 			preview.position = rock.position
 			preview.board_position = rock.board_position
@@ -312,6 +314,7 @@ func clear_preview():
 		var preview = bull.preview
 		if is_instance_valid(preview):
 			reset_health(preview, bull.hp)
+			preview.get_node("Crossout").visible = false
 			preview.visible = false
 			preview.position = bull.position
 			preview.board_position = bull.board_position
@@ -526,7 +529,8 @@ func _on_tile_mouse_entered(board_pos):
 	player.preview.position = player.position
 	player.preview.board_position = player.board_position
 	await clear_preview()
-	entity_actions.hide_preview()
+	if is_node_ready():
+		entity_actions.hide_preview()
 	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
 	if active_turns[board_pos[0]][board_pos[1]]:
 		return

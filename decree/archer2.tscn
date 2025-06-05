@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://cvartfstwbtwq"]
+[gd_scene load_steps=8 format=3 uid="uid://cvartfstwbtwq"]
 
 [ext_resource type="Script" path="res://archer.gd" id="1_3ikb7"]
 [ext_resource type="PackedScene" uid="uid://drxtkedfmor55" path="res://entity_animator.tscn" id="1_485vm"]
 [ext_resource type="Script" path="res://path_follow_2d.gd" id="2_vh84e"]
 [ext_resource type="Texture2D" uid="uid://d160d6efqvatp" path="res://Archer.png" id="3_k565i"]
 [ext_resource type="Script" path="res://health_display.gd" id="3_ns4rq"]
+[ext_resource type="PackedScene" uid="uid://gnu3kuytcu5w" path="res://crossout.tscn" id="6_fdonw"]
 
 [sub_resource type="Curve2D" id="Curve2D_1226t"]
 
@@ -33,3 +34,5 @@ offset_right = 40.0
 offset_bottom = 23.0
 
 [node name="AnimationPlayer" parent="." instance=ExtResource("1_485vm")]
+
+[node name="Crossout" parent="." instance=ExtResource("6_fdonw")]
