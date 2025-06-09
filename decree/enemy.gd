@@ -147,6 +147,10 @@ func attack(entity, target, board, player, stack):
 	if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
 		return
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
+		if !entity.preview:
+			entity_actions.show_preview()
+		else:
+			entity_actions.hide_preview()
 		var anim_player = entity.get_node("AnimationPlayer")
 		if anim_player != null:
 			await animate_attack(entity.board_position, target.board_position, anim_player)
