@@ -56,14 +56,9 @@ var running_tweens = Globals.RUNNING_TWEENS
 @onready
 var active_turns = Globals.ACTIVE_TURNS
 
-
-#current problem: some tiles aren't firing off mouse entered signals (they appear to exist though)
-
 func _ready():
 	Globals.IS_PLAYER_TURN = true
-	#entity_actions.connect("show_preview", show_preview)
 	entity_actions.connect("did_move", _on_entity_move)
-	#entity_actions.connect("turn_finished", _on_turn_finished)
 	$EndScreen.connect("restart", _restart_game)
 	if !is_instance_valid(player):
 		Globals.PLAYER = player_scene.instantiate()
@@ -104,7 +99,6 @@ func _ready():
 		rock.preview.position = rock.position
 		rock.connect("destroy_rock", destroy_rock.bind(x, y))
 		rock.preview.modulate.a = 0.3
-		#rock.connect("mouse_entered", _on_tile_mouse_entered)
 		board[x][y] = rock
 		preview_board[x][y] = rock.preview
 		navigation_layer.add_child(rock)
@@ -113,8 +107,6 @@ func _ready():
 	for i in range(Globals.BOARD_SIZE[0]):
 		var active_row = []
 		for j in range(Globals.BOARD_SIZE[1]):
-			#if board[i][j] != null and board[i][j] != player:
-				#continue
 			var tile = tile_scene.instantiate()
 			tile.position = Vector2i(i * 16, j * 16)
 			tile.board_position = Vector2i(i, j)
@@ -122,9 +114,6 @@ func _ready():
 			active_row.append(null)
 			tile.get_node("BlinkSquare").self_modulate.a = 0
 			tile.connect("is_hovering", _on_tile_mouse_entered.bind(tile.board_position))
-			#tile.pressed.connect(_on_tile_pressed.bind(tile.board_position))
-			#tile.connect("is_hovering", _on_tile_hover.bind(tile))
-			#tile.connect("mouse_exited", _on_tile_mouse_exited.bind(tile.board_position))
 			tile.connect("click", _on_tile_pressed.bind(tile.board_position))
 			terrain[i][j] = tile
 			terrain_layer.add_child(tile)
@@ -384,37 +373,7 @@ func move(board, entity, target, stack, board_pos):
 					bull.direction = "up"
 				stack.append(bull)
 	return
-	
-#func attack(entity, target, board, board_pos, tween):
-	#var entity_pos = entity.board_position
-	#var target_pos = target.board_position
-	#if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
-		#take_next_turn(board, target, enemy_stack if entity.preview else preview_stack, board_pos)
-		#return
-	#if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
-		#var anim_player = entity.get_node("AnimationPlayer")
-		#if anim_player != null:
-			#await animate_attack(entity.board_position, target.board_position, anim_player, board_pos)
-		#if target != player.preview:
-			#damage(target, entity.damage, board)
 
-#func animate_attack(entity_pos, target_pos, anim_player, board_pos):
-	#var offset = entity_pos - target_pos
-	#if anim_player.is_playing():
-		#anim_player.stop()
-	#
-	#if abs(offset[0]) > abs(offset[1]):
-		#if offset[0] < 0:
-			#anim_player.play("attack_right")
-		#else:
-			#anim_player.play("attack_left")
-	#else:
-		#if offset[1] < 0:
-			#anim_player.play("attack_down")
-		#else:
-			#anim_player.play("attack_up")
-	#await anim_player.animation_finished
-	
 func get_push_offset(player, board, tile):
 	var offset
 	if player.board_position[0] < tile.board_position[0]:
@@ -629,9 +588,7 @@ func _on_tile_pressed(board_pos):
 			await push(board[board_pos[0]][board_pos[1]], push_offset, 2, board, enemy_stack, board_pos)
 			var input_stack = await queue_enemy_turns(enemy_stack, enemies)
 			take_next_turn(board, player, input_stack, board_pos)
-	else:
-		print("hello world")
-		
+
 func _on_tile_mouse_exited(board_pos):
 	if active_turns[board_pos[0]][board_pos[1]] and active_turns[board_pos[0]][board_pos[1]]:
 		active_turns[board_pos[0]][board_pos[1]].kill()
