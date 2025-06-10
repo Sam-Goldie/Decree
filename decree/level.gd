@@ -161,6 +161,7 @@ func _ready():
 		warrior.preview.position = warrior.position
 		warrior.connect("turn_finished", take_next_turn.bind(board, player, enemy_stack, warrior.board_position))
 		warrior.preview.connect("turn_finished", take_next_turn.bind(preview_board, player.preview, preview_stack, warrior.board_position))
+		warrior.connect("destroyed", _unit_destroyed)
 		board[warrior.board_position[0]][warrior.board_position[1]] = warrior
 		preview_board[warrior.board_position[0]][warrior.board_position[1]] = warrior.preview
 		navigation_layer.add_child(warrior)
@@ -176,6 +177,7 @@ func _ready():
 		enemies.append(archer)
 		archer.connect("turn_finished", take_next_turn.bind(board, player, enemy_stack, board_position))
 		archer.preview.connect("turn_finished", take_next_turn.bind(preview_board, player.preview, preview_stack, board_position))
+		archer.connect("destroyed", _unit_destroyed)
 		archer.preview.visible = false
 		archer.preview.modulate.a = 0.3
 		archer.position = archer.board_position * 16
@@ -237,6 +239,9 @@ func take_next_turn(board, target_player, stack, board_pos):
 	if len(stack) == 0:
 		Globals.IS_PLAYER_TURN = true
 		return
+	if len(enemies) == 0:
+		_on_player_win()
+		return
 	var enemy = stack.pop_back()
 	if !is_instance_valid(enemy):
 		take_next_turn(board, target_player, stack, board_pos)
@@ -247,7 +252,7 @@ func queue_enemy_turns(stack, enemies):
 	for enemy in enemies:
 		enemy.has_moved = false
 		stack.insert(0, enemy)
-	return stack	
+	return stack
 	
 func reset_health(entity, new_hp):
 	entity.hp = new_hp
@@ -257,9 +262,11 @@ func reset_health(entity, new_hp):
 func clear_preview():
 	for active_tween in running_tweens:
 		active_tween[0].kill()
-		if active_tween[1]:
+		if is_instance_valid(active_tween[1]):
 			active_tween[1].position = active_tween[1].position
 			active_tween[1].board_position = get_board_position(active_tween[1].position)
+	player.get_node("AnimationPlayer").stop()
+	player.preview.get_node("AnimationPlayer").stop()
 	await clear_dead([preview_entities, preview_stack, enemies, running_tweens, rocks, bulls, active_turns, preview_board])
 	reset_health(player.preview, player.hp)
 	player.preview.visible = false
@@ -268,6 +275,7 @@ func clear_preview():
 	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
 	player.preview.get_node("Crossout").visible = false
 	for enemy in enemies:
+		enemy.get_node("AnimationPlayer").stop()
 		var preview = enemy.preview
 		if is_instance_valid(preview):
 			reset_health(preview, enemy.hp)
@@ -377,34 +385,35 @@ func move(board, entity, target, stack, board_pos):
 				stack.append(bull)
 	return
 	
-func attack(entity, target, board, board_pos, tween):
-	var entity_pos = entity.board_position
-	var target_pos = target.board_position
-	if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
-		take_next_turn(board, target, enemy_stack if entity.preview else preview_stack, board_pos)
-		return
-	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
-		var anim_player = entity.get_node("AnimationPlayer")
-		if anim_player != null:
-			await animate_attack(entity.board_position, target.board_position, anim_player, board_pos)
-		if target != player.preview:
-			damage(target, entity.damage, board)
+#func attack(entity, target, board, board_pos, tween):
+	#var entity_pos = entity.board_position
+	#var target_pos = target.board_position
+	#if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
+		#take_next_turn(board, target, enemy_stack if entity.preview else preview_stack, board_pos)
+		#return
+	#if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
+		#var anim_player = entity.get_node("AnimationPlayer")
+		#if anim_player != null:
+			#await animate_attack(entity.board_position, target.board_position, anim_player, board_pos)
+		#if target != player.preview:
+			#damage(target, entity.damage, board)
 
-func animate_attack(entity_pos, target_pos, anim_player, board_pos):
-	var offset = entity_pos - target_pos
-	if anim_player.is_playing():
-		anim_player.stop()
-	if abs(offset[0]) > abs(offset[1]):
-		if offset[0] < 0:
-			anim_player.play("attack_right")
-		else:
-			anim_player.play("attack_left")
-	else:
-		if offset[1] < 0:
-			anim_player.play("attack_down")
-		else:
-			anim_player.play("attack_up")
-	await anim_player.animation_finished
+#func animate_attack(entity_pos, target_pos, anim_player, board_pos):
+	#var offset = entity_pos - target_pos
+	#if anim_player.is_playing():
+		#anim_player.stop()
+	#
+	#if abs(offset[0]) > abs(offset[1]):
+		#if offset[0] < 0:
+			#anim_player.play("attack_right")
+		#else:
+			#anim_player.play("attack_left")
+	#else:
+		#if offset[1] < 0:
+			#anim_player.play("attack_down")
+		#else:
+			#anim_player.play("attack_up")
+	#await anim_player.animation_finished
 	
 func get_push_offset(player, board, tile):
 	var offset
@@ -449,6 +458,11 @@ func _on_player_lose():
 func _on_player_win():
 	$EndScreen/TextEdit.text = "YOU WIN YOU WIN YOU WIN"
 	$EndScreen.visible = true
+
+func _unit_destroyed():
+	clear_dead([enemies])
+	if len(enemies) == 0:
+		_on_player_win()
 
 func global_reset():
 	Globals.PLAYER = player_scene.instantiate()

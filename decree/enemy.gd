@@ -1,6 +1,7 @@
 extends Node2D
 
 signal turn_finished
+signal destroyed
 
 var move_pattern_scene = preload("res://move_patterns.gd")
 var entity_actions_scene = preload("res://entity_actions.gd")
@@ -77,6 +78,7 @@ func destroy():
 	if preview:
 		preview.queue_free()
 		self.queue_free()
+		destroyed.emit()
 	else:
 		get_node("Crossout").visible = true
 
