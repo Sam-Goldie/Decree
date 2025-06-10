@@ -9,6 +9,7 @@ var speed : int
 var is_enemy : bool
 var preview : Node2D
 var tween : Tween
+var prev_pos : Vector2
 
 signal move(entity, target)
 signal attack(entity, target)

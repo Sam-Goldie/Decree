@@ -5,6 +5,7 @@ var hp : int
 var is_enemy : bool
 var type : String
 var preview : Node2D
+var prev_pos : Vector2
 
 
 signal destroy_rock

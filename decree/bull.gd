@@ -6,6 +6,7 @@ var move_pattern_scene = preload("res://move_patterns.gd")
 var entity_actions_scene = preload("res://entity_actions.gd")
 var board = Globals.BOARD
 var preview_board = Globals.PREVIEW_BOARD
+var prev_pos : Vector2
 
 var board_position : Vector2i
 var hp : int
@@ -112,7 +113,7 @@ func animate_attack(entity_pos, target_pos, anim_player):
 func move(board, entity, target, stack, board_pos):
 	var tween = create_tween()
 	active_turns[board_pos[0]][board_pos[1]] = tween
-	var prev_position = entity.board_position
+	prev_pos = entity.board_position
 	if !is_valid_position(target):
 		return
 	if board[target[0]][target[1]] == null:
@@ -121,12 +122,12 @@ func move(board, entity, target, stack, board_pos):
 			entity_actions.show_preview()
 		else:
 			entity_actions.hide_preview()
-		running_tweens.append(tween)
+		running_tweens.append([tween, entity])
 		tween.tween_property(entity, "position", new_pos, 0.2)
 		if tween.is_running():
 			await tween.finished
 		print(tween.is_running())
-		board[prev_position[0]][prev_position[1]] = null
+		board[prev_pos[0]][prev_pos[1]] = null
 		board[target[0]][target[1]] = entity
 		if !is_instance_valid(entity):
 			return

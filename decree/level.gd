@@ -256,7 +256,10 @@ func reset_health(entity, new_hp):
 
 func clear_preview():
 	for active_tween in running_tweens:
-		active_tween.kill()
+		active_tween[0].kill()
+		if active_tween[1]:
+			active_tween[1].position = active_tween[1].position
+			active_tween[1].board_position = get_board_position(active_tween[1].position)
 	await clear_dead([preview_entities, preview_stack, enemies, running_tweens, rocks, bulls, active_turns, preview_board])
 	reset_health(player.preview, player.hp)
 	player.preview.visible = false
@@ -300,7 +303,8 @@ func clear_dead(entity_lists):
 		if len(list) > 0 and typeof(list[0]) == TYPE_ARRAY:
 			for sublist in list:
 				for i in range(len(sublist)):
-					if sublist[i] != null:
+					var element = sublist[i]
+					if element != null:
 						if sublist[i].has_method("kill"):
 							sublist[i].kill()
 						sublist[i] = null
@@ -325,9 +329,9 @@ func damage(target, amount, board):
 func move(board, entity, target, stack, board_pos):
 	var tween = create_tween()
 	active_turns[board_pos[0]][board_pos[1]] = tween
-	var prev_position = entity.board_position
+	entity.prev_pos = entity.board_position
 	if entity == player:
-		remove_target_highlights(prev_position)
+		remove_target_highlights(get_board_position(entity.prev_pos))
 	if !is_valid_position(target):
 		return
 	if board[target[0]][target[1]] == null:
@@ -336,10 +340,10 @@ func move(board, entity, target, stack, board_pos):
 			show_preview()
 		else:
 			hide_preview()
-		running_tweens.append(tween)
+		running_tweens.append([tween, entity])
 		tween.tween_property(entity, "position", new_pos, 0.2)
 		await tween.finished
-		board[prev_position[0]][prev_position[1]] = null
+		board[entity.prev_pos[0]][entity.prev_pos[1]] = null
 		board[target[0]][target[1]] = entity
 		if !is_instance_valid(entity):
 			return
@@ -440,10 +444,28 @@ func destroy_rock(x, y):
 func _on_player_lose():
 	$EndScreen/TextEdit.text = "YOU LOSE YOU LOSE YOU LOSE"
 	$EndScreen.visible = true
+	global_reset()
 	
 func _on_player_win():
 	$EndScreen/TextEdit.text = "YOU WIN YOU WIN YOU WIN"
 	$EndScreen.visible = true
+
+func global_reset():
+	Globals.PLAYER = player_scene.instantiate()
+	Globals.HEALTH_PATH = "Navigation/%s/Path2D/PathFollow2D/Sprite2D/Label"
+	Globals.TURN_ORDER_PATH = "Path2D/PathFollow2D/Sprite2D/TurnOrder"
+	Globals.ROCK_COORDS = Rect2(96, 32, 16, 16)
+	Globals.BOARD_SIZE = Vector2i(6,6)
+	Globals.BOARD = []
+	Globals.PREVIEW_BOARD = []
+	Globals.TERRAIN = []
+	Globals.GRID = AStarGrid2D.new()
+	Globals.ENEMIES = []
+	Globals.RUNNING_TWEENS = []
+	Globals.IS_PLAYER_TURN = true
+	Globals.BULLS = []
+	Globals.ROCKS = []
+	Globals.ACTIVE_TURNS = []
 
 func _on_entity_move():
 	return
