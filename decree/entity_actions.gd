@@ -11,6 +11,15 @@ var running_tweens = Globals.RUNNING_TWEENS
 var rocks = Globals.ROCKS
 var active_turns = Globals.ACTIVE_TURNS
 
+func initialize():
+	preview_board = Globals.PREVIEW_BOARD
+	player = Globals.PLAYER
+	enemies = Globals.ENEMIES
+	bulls = Globals.BULLS
+	running_tweens = Globals.RUNNING_TWEENS
+	rocks = Globals.ROCKS
+	active_turns = Globals.ACTIVE_TURNS
+
 func is_valid_position(board_position):
 	if board_position[0] < 0 or board_position[0] > Globals.BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > Globals.BOARD_SIZE[1] - 1:
 		return false
@@ -24,6 +33,8 @@ func is_in_range(position1, position2, range):
 		return false
 
 func show_preview():
+	if !is_instance_valid(player):
+		initialize()
 	player.preview.visible = true
 	for enemy in enemies:
 		if is_instance_valid(enemy) and is_instance_valid(enemy.preview):

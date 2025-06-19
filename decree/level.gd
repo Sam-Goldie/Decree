@@ -32,7 +32,7 @@ var preview_stack = []
 @onready
 var terrain = []
 @onready
-var rock_count = 7
+var rock_count = 5
 @onready
 var rocks = Globals.ROCKS
 @onready
@@ -200,30 +200,6 @@ func action_delay(_duration):
 		$Timer.start()
 	await $Timer.timeout
 
-func show_preview():
-	player.preview.visible = true
-	for enemy in enemies:
-		if is_instance_valid(enemy) and is_instance_valid(enemy.preview):
-			enemy.preview.visible = true
-	for bull in bulls:
-		if is_instance_valid(bull) and is_instance_valid(bull.preview):
-			bull.preview.visible = true
-	for rock in rocks:
-		if is_instance_valid(rock) and is_instance_valid(rock.preview):
-			rock.preview.visible = true
-
-func hide_preview():
-	player.preview.visible = false
-	for enemy in enemies:
-		if is_instance_valid(enemy) and is_instance_valid(enemy.preview):
-			enemy.preview.visible = false
-	for bull in bulls:
-		if is_instance_valid(bull) and is_instance_valid(bull.preview):
-			bull.preview.visible = false
-	for rock in rocks:
-		if is_instance_valid(rock) and is_instance_valid(rock.preview):
-			rock.preview.visible = false
-
 func take_next_turn(board, target_player, stack, board_pos):
 	if len(stack) == 0:
 		Globals.IS_PLAYER_TURN = true
@@ -334,9 +310,9 @@ func move(board, entity, target, stack, board_pos):
 	if board[target[0]][target[1]] == null:
 		var new_pos = Vector2(target * 16)
 		if !entity.preview:
-			show_preview()
+			entity_actions.show_preview()
 		else:
-			hide_preview()
+			entity_actions.hide_preview()
 		running_tweens.append([tween, entity])
 		tween.tween_property(entity, "position", new_pos, 0.2)
 		await tween.finished
@@ -496,10 +472,10 @@ func _on_tile_mouse_entered(board_pos):
 	if (!is_in_range(player.board_position, board_pos, player.speed) and target == null) or (!is_in_range(player.board_position, board_pos, player.speed + 1) and target != null): 
 		current_tile = Vector2i(-1,-1)
 		hide_turn_order()
-		hide_preview()
+		entity_actions.hide_preview()
 		return
 	current_tile = board_pos
-	show_preview()
+	entity_actions.show_preview()
 	if is_in_range(player.board_position, board_pos, player.speed) and target == null:
 		await move(preview_board, player.preview, board_pos, preview_stack, board_pos)
 		var input_stack = await queue_enemy_turns(preview_stack, preview_entities)
@@ -536,12 +512,12 @@ func _on_tile_mouse_entered(board_pos):
 			take_next_turn(preview_board, player.preview, input_stack, board_pos)
 	else:
 		hide_turn_order()
-		hide_preview()
+		entity_actions.hide_preview()
 		clear_preview()
 	active_turns[board_pos[0]][board_pos[1]] = null
 
 func _on_tile_pressed(board_pos):
-	hide_preview()
+	entity_actions.hide_preview()
 	if !Globals.IS_PLAYER_TURN or player.board_position == board_pos:
 		return
 	clear_preview()
