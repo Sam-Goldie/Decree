@@ -56,6 +56,8 @@ var running_tweens = Globals.RUNNING_TWEENS
 @onready
 var active_turns = Globals.ACTIVE_TURNS
 
+# REINSTITUTE TURN ORDER DISPLAY
+
 func _ready():
 	Globals.IS_PLAYER_TURN = true
 	entity_actions.connect("did_move", _on_entity_move)
@@ -426,12 +428,9 @@ func show_turn_order():
 	clear_dead([enemies, rocks])
 	for i in range(len(enemies)):
 		var enemy = enemies[i]
-		var turn_display = enemy.get_node(Globals.TURN_ORDER_PATH)
+		var turn_display = enemy.preview.get_node(Globals.TURN_ORDER_PATH)
 		turn_display.text = str(i + 1)
-		if turn_display.visible == true:
-			return
-		else:
-			turn_display.visible = true
+		turn_display.visible = true
 			
 func hide_turn_order():
 	for enemy in enemies:
@@ -475,6 +474,7 @@ func _on_tile_mouse_entered(board_pos):
 		entity_actions.hide_preview()
 		return
 	current_tile = board_pos
+	show_turn_order()
 	entity_actions.show_preview()
 	if is_in_range(player.board_position, board_pos, player.speed) and target == null:
 		await move(preview_board, player.preview, board_pos, preview_stack, board_pos)
