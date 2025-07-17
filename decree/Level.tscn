@@ -132,7 +132,6 @@ wait_time = 0.1
 
 [connection signal="attack" from="Navigation/Player" to="." method="_on_attack"]
 [connection signal="lose" from="Navigation/Player" to="." method="_on_player_lose"]
-[connection signal="move" from="Navigation/Player" to="." method="_on_move"]
 [connection signal="mouse_entered" from="Navigation/Tile" to="." method="_on_tile_mouse_entered" binds= [Vector2i(0, 0)]]
 [connection signal="mouse_exited" from="Navigation/Tile" to="." method="_on_tile_mouse_exited"]
 [connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_animation_player_animation_finished"]

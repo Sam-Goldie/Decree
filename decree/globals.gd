@@ -12,6 +12,7 @@ var PREVIEW_BOARD := []
 var TERRAIN := []
 var GRID := AStarGrid2D.new()
 var ENEMIES := []
+var PREVIEW_ENEMIES := []
 var RUNNING_TWEENS := []
 var IS_PLAYER_TURN := true
 var BULLS := []

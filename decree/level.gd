@@ -1,6 +1,6 @@
 extends Node2D
 
-#RESET HEALTH IS CAUSING THE PROBLEM WITH DAMAGE NOT DISPLAYING. IT FIRES AT WRONG TIME
+#WHY IS THE PLAYER VANISHING ON PREVIEW
 
 var player_scene = preload("res://Player.tscn")
 var enemy_scene = preload("res://Enemy.tscn")
@@ -25,6 +25,8 @@ var archer_count = 1
 var bull_count = 1
 @onready
 var enemies = Globals.ENEMIES
+@onready
+var preview_enemies = Globals.PREVIEW_ENEMIES
 @onready
 var enemy_stack = []
 @onready
@@ -56,8 +58,6 @@ var running_tweens = Globals.RUNNING_TWEENS
 @onready
 var active_turns = Globals.ACTIVE_TURNS
 
-# REINSTITUTE TURN ORDER DISPLAY
-
 func _ready():
 	Globals.IS_PLAYER_TURN = true
 	entity_actions.connect("did_move", _on_entity_move)
@@ -83,6 +83,8 @@ func _ready():
 	player.preview.initialize(player_start, 5, false, 2, 1, false, null)
 	player.position = player.board_position * 16
 	player.preview.position = player.preview.board_position * 16
+	player.connect("turn_finished", take_next_turn.bind(board, player, enemy_stack, player.board_position))
+	player.preview.connect("turn_finished", take_next_turn.bind(preview_board, player.preview, preview_stack, player.board_position))
 	navigation_layer.add_child(player)
 	navigation_layer.add_child(player.preview)
 	board[player_start[0]][player_start[1]] = player
@@ -144,6 +146,7 @@ func _ready():
 		warrior.preview.visible = false
 		warrior.preview.modulate.a = 0.3
 		enemies.append(warrior)
+		preview_enemies.append(warrior.preview)
 		preview_entities.append(warrior.preview)
 		while warrior.board_position == Vector2i(-1,-1) or board[warrior.board_position[0]][warrior.board_position[1]] != null:
 			warrior.board_position = Vector2i(rng.randi_range(0, Globals.BOARD_SIZE[0] - 1), rng.randi_range(0, Globals.BOARD_SIZE[1] - 1))
@@ -166,6 +169,7 @@ func _ready():
 		archer.preview.initialize(board_position, 3, 1, false, 1, 100, true, enemies, "archer", null)
 		preview_entities.append(archer.preview)
 		enemies.append(archer)
+		preview_enemies.append(archer.preview)
 		archer.connect("turn_finished", take_next_turn.bind(board, player, enemy_stack, board_position))
 		archer.preview.connect("turn_finished", take_next_turn.bind(preview_board, player.preview, preview_stack, board_position))
 		archer.connect("destroyed", _unit_destroyed)
@@ -202,8 +206,11 @@ func action_delay(_duration):
 		$Timer.start()
 	await $Timer.timeout
 
+# delay actions are weird and need work
 func take_next_turn(board, target_player, stack, board_pos):
 	if len(stack) == 0:
+		if target_player == player:
+			await action_delay(1)
 		Globals.IS_PLAYER_TURN = true
 		return
 	if len(enemies) == 0:
@@ -213,6 +220,7 @@ func take_next_turn(board, target_player, stack, board_pos):
 	if !is_instance_valid(enemy):
 		take_next_turn(board, target_player, stack, board_pos)
 		return
+	await action_delay(0.15)
 	enemy.take_turn(board, target_player, stack, board_pos)
 			
 func queue_enemy_turns(stack, enemies):
@@ -455,115 +463,117 @@ func _on_tile_mouse_entered(board_pos):
 	var pos = get_viewport().get_mouse_position()
 	if !Globals.IS_PLAYER_TURN or board_pos == current_tile:
 		return
-	player.preview.visible = false
 	player.preview.position = player.position
 	player.preview.board_position = player.board_position
+	player.visible = false
 	await clear_preview()
-	if is_node_ready():
-		entity_actions.hide_preview()
-	preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
-	if active_turns[board_pos[0]][board_pos[1]]:
-		return
-	if !is_valid_position(board_pos):
-		current_tile = Vector2i(-1,-1)
-		return
-	var target = preview_board[board_pos[0]][board_pos[1]]
-	if (!is_in_range(player.board_position, board_pos, player.speed) and target == null) or (!is_in_range(player.board_position, board_pos, player.speed + 1) and target != null): 
-		current_tile = Vector2i(-1,-1)
-		hide_turn_order()
-		entity_actions.hide_preview()
-		return
-	current_tile = board_pos
-	show_turn_order()
-	entity_actions.show_preview()
-	if is_in_range(player.board_position, board_pos, player.speed) and target == null:
-		await move(preview_board, player.preview, board_pos, preview_stack, board_pos)
-		var input_stack = await queue_enemy_turns(preview_stack, preview_entities)
-		take_next_turn(preview_board, player.preview, input_stack, board_pos)
-	elif is_in_range(player.board_position, board_pos, player.speed + 1) and target != null and target != player.preview:
-		var dests = []
-		var offsets = [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]
-		for offset in offsets:
-			var dest = board_pos + offset
-			if is_valid_position(dest) and is_in_range(player.board_position, dest, player.speed) and (board[dest[0]][dest[1]] == null):
-				dests.append(dest)
-		var closest_dest
-		var distance = -1
-		for dest in dests:
-			var dest_distance
-			var horizonality = abs(int(pos[0]) % 16)
-			var verticality = abs(int(pos[1]) % 16)
-			if dest[0] < board_pos[0]:
-				dest_distance = horizonality
-			elif dest[0] > board_pos[0]:
-				dest_distance = 16 - horizonality
-			elif dest[1] < board_pos[1]:
-				dest_distance = verticality
-			else:
-				dest_distance = 16 - verticality
-			if dest_distance < distance or distance == -1:
-				closest_dest = dest
-				distance = dest_distance
-		if closest_dest != null:
-			await move(preview_board, player.preview, closest_dest, preview_stack, board_pos)
-			var offset = get_push_offset(player.preview, preview_board, target)
-			await push(target, offset, 2, preview_board, preview_stack, board_pos)
-			var input_stack = await queue_enemy_turns(preview_stack, preview_entities)
-			take_next_turn(preview_board, player.preview, input_stack, board_pos)
-	else:
-		hide_turn_order()
-		entity_actions.hide_preview()
-		clear_preview()
-	active_turns[board_pos[0]][board_pos[1]] = null
+	player.preview.visible = true
+	#if is_node_ready():
+		#entity_actions.hide_preview()
+	#preview_board[player.preview.board_position[0]][player.preview.board_position[1]] = player.preview
+	#if active_turns[board_pos[0]][board_pos[1]]:
+		#return
+	#if !is_valid_position(board_pos):
+		#current_tile = Vector2i(-1,-1)
+		#return
+	#var target = preview_board[board_pos[0]][board_pos[1]]
+	#if (!is_in_range(player.board_position, board_pos, player.speed) and target == null) or (!is_in_range(player.board_position, board_pos, player.speed + 1) and target != null): 
+		#current_tile = Vector2i(-1,-1)
+		#hide_turn_order()
+		#entity_actions.hide_preview()
+		#return
+	player.take_turn(preview_board, player.preview, preview_stack, board_pos)
+	#current_tile = board_pos
+	#show_turn_order()
+	#entity_actions.show_preview()
+	#if is_in_range(player.board_position, board_pos, player.speed) and target == null:
+		#await move(preview_board, player.preview, board_pos, preview_stack, board_pos)
+		#var input_stack = await queue_enemy_turns(preview_stack, preview_entities)
+		#take_next_turn(preview_board, player.preview, input_stack, board_pos)
+	#elif is_in_range(player.board_position, board_pos, player.speed + 1) and target != null and target != player.preview:
+		#var dests = []
+		#var offsets = [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]
+		#for offset in offsets:
+			#var dest = board_pos + offset
+			#if is_valid_position(dest) and is_in_range(player.board_position, dest, player.speed) and (board[dest[0]][dest[1]] == null):
+				#dests.append(dest)
+		#var closest_dest
+		#var distance = -1
+		#for dest in dests:
+			#var dest_distance
+			#var horizonality = abs(int(pos[0]) % 16)
+			#var verticality = abs(int(pos[1]) % 16)
+			#if dest[0] < board_pos[0]:
+				#dest_distance = horizonality
+			#elif dest[0] > board_pos[0]:
+				#dest_distance = 16 - horizonality
+			#elif dest[1] < board_pos[1]:
+				#dest_distance = verticality
+			#else:
+				#dest_distance = 16 - verticality
+			#if dest_distance < distance or distance == -1:
+				#closest_dest = dest
+				#distance = dest_distance
+		#if closest_dest != null:
+			#await move(preview_board, player.preview, closest_dest, preview_stack, board_pos)
+			#var offset = get_push_offset(player.preview, preview_board, target)
+			#await push(target, offset, 2, preview_board, preview_stack, board_pos)
+			#var input_stack = await queue_enemy_turns(preview_stack, preview_entities)
+			#take_next_turn(preview_board, player.preview, input_stack, board_pos)
+	#else:
+		#hide_turn_order()
+		#entity_actions.hide_preview()
+		#clear_preview()
+	#active_turns[board_pos[0]][board_pos[1]] = null
 
 func _on_tile_pressed(board_pos):
 	entity_actions.hide_preview()
 	if !Globals.IS_PLAYER_TURN or player.board_position == board_pos:
 		return
 	clear_preview()
-	var target_content = board[board_pos[0]][board_pos[1]]
-	var in_short_range = is_in_range(player.board_position, board_pos, player.speed)
-	var in_long_range = is_in_range(player.board_position, board_pos, player.speed + 1)
-	if board[board_pos[0]][board_pos[1]] == null and is_in_range(player.board_position, board_pos, player.speed):
-		var dest = move_patterns.shift_target(player, board_pos)
-		if dest != null:
-			Globals.IS_PLAYER_TURN = false
-			await move(board, player, board_pos, enemy_stack, board_pos)
-			var input_stack = await queue_enemy_turns(enemy_stack, enemies)
-			take_next_turn(board, player, input_stack, board_pos)
-	elif board[board_pos[0]][board_pos[1]] != null and is_in_range(player.board_position, board_pos, player.speed + 1):
-		var pos = get_viewport().get_mouse_position()
-		var dests = []
-		var offsets = [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]
-		for offset in offsets:
-			var dest = board_pos + offset
-			if is_valid_position(dest) and is_in_range(player.board_position, dest, player.speed) and board[dest[0]][dest[1]] == null:
-				dests.append(dest)
-		var closest_dest
-		var distance = -1
-		for dest in dests:
-			var dest_distance
-			var horizonality = abs(int(pos[0]) % 16)
-			var verticality = abs(int(pos[1]) % 16)
-			if dest[0] < board_pos[0]:
-				dest_distance = horizonality
-			elif dest[0] > board_pos[0]:
-				dest_distance = 16 - horizonality
-			elif dest[1] < board_pos[1]:
-				dest_distance = verticality
-			else:
-				dest_distance = 16 - verticality
-			if dest_distance < distance or distance == -1:
-				closest_dest = dest
-				distance = dest_distance
-		if closest_dest != null:
-			Globals.IS_PLAYER_TURN = false
-			hide_turn_order()
-			await move(board, player, closest_dest, enemy_stack, board_pos)
-			var push_offset = get_push_offset(player, board, board[board_pos[0]][board_pos[1]])
-			await push(board[board_pos[0]][board_pos[1]], push_offset, 2, board, enemy_stack, board_pos)
-			var input_stack = await queue_enemy_turns(enemy_stack, enemies)
-			take_next_turn(board, player, input_stack, board_pos)
+	player.preview.take_turn(board, player, enemy_stack, board_pos)
+	#var target_content = board[board_pos[0]][board_pos[1]]
+	#var in_short_range = is_in_range(player.board_position, board_pos, player.speed)
+	#var in_long_range = is_in_range(player.board_position, board_pos, player.speed + 1)
+	#if board[board_pos[0]][board_pos[1]] == null and in_short_range:
+		#var dest = move_patterns.shift_target(player, board_pos)
+		#if dest != null:
+			#Globals.IS_PLAYER_TURN = false
+			#var input_stack = await queue_enemy_turns(enemy_stack, enemies)
+			#player.take_turn(board, player, input_stack, board_pos)
+	#elif board[board_pos[0]][board_pos[1]] != null and in_long_range:
+		#var pos = get_viewport().get_mouse_position()
+		#var dests = []
+		#var offsets = [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]
+		#for offset in offsets:
+			#var dest = board_pos + offset
+			#if is_valid_position(dest) and is_in_range(player.board_position, dest, player.speed) and board[dest[0]][dest[1]] == null:
+				#dests.append(dest)
+		#var closest_dest
+		#var distance = -1
+		#for dest in dests:
+			#var dest_distance
+			#var horizonality = abs(int(pos[0]) % 16)
+			#var verticality = abs(int(pos[1]) % 16)
+			#if dest[0] < board_pos[0]:
+				#dest_distance = horizonality
+			#elif dest[0] > board_pos[0]:
+				#dest_distance = 16 - horizonality
+			#elif dest[1] < board_pos[1]:
+				#dest_distance = verticality
+			#else:
+				#dest_distance = 16 - verticality
+			#if dest_distance < distance or distance == -1:
+				#closest_dest = dest
+				#distance = dest_distance
+		#if closest_dest != null:
+			#Globals.IS_PLAYER_TURN = false
+			#hide_turn_order()
+			#await move(board, player, closest_dest, enemy_stack, board_pos)
+			#var push_offset = get_push_offset(player, board, board[board_pos[0]][board_pos[1]])
+			#await push(board[board_pos[0]][board_pos[1]], push_offset, 2, board, enemy_stack, board_pos)
+			#var input_stack = await queue_enemy_turns(enemy_stack, enemies)
+			#take_next_turn(board, player, input_stack, board_pos)
 
 func _on_tile_mouse_exited(board_pos):
 	if active_turns[board_pos[0]][board_pos[1]] and active_turns[board_pos[0]][board_pos[1]]:
