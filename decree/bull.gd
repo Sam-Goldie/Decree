@@ -122,10 +122,11 @@ func move(board, entity, target, stack, board_pos):
 			entity_actions.show_preview()
 		else:
 			entity_actions.hide_preview()
-		running_tweens.append([tween, entity])
+		running_tweens[tween] = entity
 		tween.tween_property(entity, "position", new_pos, 0.2)
 		if tween.is_running():
 			await tween.finished
+		running_tweens.erase(tween)
 		print(tween.is_running())
 		board[prev_pos[0]][prev_pos[1]] = null
 		board[target[0]][target[1]] = entity

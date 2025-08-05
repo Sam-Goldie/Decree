@@ -26,6 +26,7 @@ var active_turns = Globals.ACTIVE_TURNS
 var rocks = Globals.ROCKS
 var player = Globals.PLAYER
 var bulls = Globals.BULLS
+var is_finished = false
 
 func _ready():
 	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)
@@ -56,6 +57,7 @@ func find_targets(board, player):
 	return null
 
 func take_turn(board, target_player, stack, board_pos):
+	is_finished = false
 	var dest = plan_move(board, target_player)
 	var target
 	if dest != null and dest != board_position:
@@ -106,10 +108,11 @@ func move(board, entity, target, stack, board_pos):
 			entity_actions.show_preview()
 		else:
 			entity_actions.hide_preview()
-		running_tweens.append([tween, entity])
+		running_tweens[tween] = entity
 		tween.tween_property(entity, "position", new_pos, 0.2)
 		if tween.is_running():
 			await tween.finished
+		running_tweens.erase(tween)
 		board[prev_pos[0]][prev_pos[1]] = null
 		board[target[0]][target[1]] = entity
 		if !is_instance_valid(entity):
@@ -145,6 +148,8 @@ func move(board, entity, target, stack, board_pos):
 	return
 
 func attack(entity, target, board, player, stack):
+	var anim_player = entity.get_node("AnimationPlayer")
+	Globals.ACTIVE_ANIM = anim_player
 	var entity_pos = entity.board_position
 	var target_pos = target.board_position
 	if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
@@ -154,10 +159,11 @@ func attack(entity, target, board, player, stack):
 			entity_actions.show_preview()
 		else:
 			entity_actions.hide_preview()
-		var anim_player = entity.get_node("AnimationPlayer")
 		if anim_player != null:
 			await animate_attack(entity.board_position, target.board_position, anim_player)
-		if target != player.preview:
+		var progress = anim_player.get_current_animation_position()
+		if target != player.preview and anim_player.get_current_animation_length() - anim_player.get_current_animation_position() == 0 and !is_finished:
+			is_finished = true
 			entity_actions.damage(target, entity.damage, board, player)
 
 func animate_attack(entity_pos, target_pos, anim_player):
