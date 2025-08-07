@@ -1,9 +1,11 @@
 extends Node2D
 
 signal turn_finished
+signal destroyed
 
 var move_pattern_scene = preload("res://move_patterns.gd")
 var entity_actions_scene = preload("res://entity_actions.gd")
+var prev_pos : Vector2
 
 var board_position : Vector2i
 var hp : int
@@ -23,6 +25,7 @@ var rocks = Globals.ROCKS
 var player = Globals.PLAYER
 var bulls = Globals.BULLS
 var preview_board = Globals.PREVIEW_BOARD
+var is_finished = false
 
 func _ready():
 	var hp_display = str(hp)
@@ -44,6 +47,7 @@ func plan_move(board, player):
 	return move_patterns.shift_chase_axis(self, player.board_position)
 
 func take_turn(board, target_player, stack, board_pos):
+	is_finished = false
 	var dest = plan_move(board, target_player)
 	var target
 	if dest != null and dest != board_position:
@@ -93,6 +97,9 @@ func destroy():
 	if preview:
 		preview.queue_free()
 		self.queue_free()
+		destroyed.emit()
+	else:
+		get_node("Crossout").visible = true
 
 func is_valid_position(board_position):
 	if board_position[0] < 0 or board_position[0] > Globals.BOARD_SIZE[0] - 1 or board_position[1] < 0 or board_position[1] > Globals.BOARD_SIZE[1] - 1:
@@ -105,15 +112,12 @@ func is_in_range(position1, position2, range):
 		return true
 	else:
 		return false 
-
+# why does archer complete tween no problem? but not warrior
 #investigate tween callback
 func move(board, entity, target, stack, board_pos):
-	#tween.tween_callback(entity.find_targets)
-	var tween = create_tween()
+	var tween = get_tree().create_tween()
 	active_turns[board_pos[0]][board_pos[1]] = tween
-	var prev_position = entity.board_position
-	#if entity == player:
-		#remove_target_highlights(prev_position)
+	prev_pos = entity.board_position
 	if !is_valid_position(target):
 		return
 	if board[target[0]][target[1]] == null:
@@ -122,14 +126,13 @@ func move(board, entity, target, stack, board_pos):
 			entity_actions.show_preview()
 		else:
 			entity_actions.hide_preview()
-		running_tweens.append(tween)
+		running_tweens[tween] = entity
 		tween.tween_property(entity, "position", new_pos, 0.2)
 		if tween.is_running():
 			await tween.finished
+		running_tweens.erase(tween)
 		print(tween.is_running())
-		#tween never finishes
-		#how could target have changed from the tweening?
-		board[prev_position[0]][prev_position[1]] = null
+		board[prev_pos[0]][prev_pos[1]] = null
 		board[target[0]][target[1]] = entity
 		if !is_instance_valid(entity):
 			return
@@ -162,96 +165,24 @@ func move(board, entity, target, stack, board_pos):
 					bull.direction = "up"
 				stack.append(bull)
 	return
-			
-#func move(board, entity, target):
-	#var tween = $Navigation.create_tween()
-	##var tween = create_tween()
-	##var did_move = false
-	#var prev_position = entity.board_position
-	#if !is_valid_position(target):
-		#return did_move
-	#if board[target[0]][target[1]] == null:
-		#var new_pos = Vector2(target * 16)
-		##entity.position = target * 16
-		#tween.tween_property(entity, "position", new_pos, 0.2)
-		#await tween.finished
-		#tween.stop()
-		##if entity.position != new_pos:
-			##return
-		#board[prev_position[0]][prev_position[1]] = null
-		#board[target[0]][target[1]] = entity
-		#entity.board_position = target
-		#if entity.preview:
-			#entity.preview.position = entity.position
-			#entity.preview.board_position = entity.board_position
-			#preview_board[target[0]][target[1]] = entity.preview
-		#if entity.is_enemy or entity == player:
-			#entity.has_moved = true
-		#did_move.emit()
-			#
-		##for i in range(len(bulls)):
-			##var bull = bulls[i]
-			##var is_queued = false
-			##for enemy in enemy_stack:
-				##if enemy == bull:
-					##is_queued = true
-					##break
-			##if is_queued:
-				##continue
-			##if bull == entity:
-				##continue
-			##if bull.board_position[0] == target[0] or bull.board_position[1] == target[1]:
-				##if bull.board_position[0] < target[0]:
-					##bull.direction = "right"
-				##elif bull.board_position[0] > target[0]:
-					##bull.direction = "left"
-				##elif bull.board_position[1] < target[1]:
-					##bull.direction = "down"
-				##elif bull.board_position[1] > target[1]:
-					##bull.direction = "up"
-				##enemy_stack.append(bull)
-	#if entity == player:
-		#player.prev_board_position = prev_position
-	#return did_move
-
-#func move(board, entity, target, tween):
-	##var tween = create_tween()
-	#hide_preview.emit()
-	#var prev_position = entity.board_position
-	#if !is_valid_position(target):
-		#return did_move
-	#if board[target[0]][target[1]] == null:
-		#var new_pos = Vector2(target * 16)
-		##entity.position = target * 16
-		#show_preview.emit()
-		#tween.stop()
-		#tween.tween_property(entity, "position", new_pos, 0.2)
-		##if tween.is_running():
-			##await tween.finished
-		##else:
-			##print("error in move")
-			##return
-		##if entity.position != new_pos:
-			##return
-		#board[prev_position[0]][prev_position[1]] = null
-		#board[target[0]][target[1]] = entity
-		#entity.board_position = target
-		#did_move.emit()
-		
 
 func attack(entity, target, board, player, stack):
+	var anim_player = entity.get_node("AnimationPlayer")
+	Globals.ACTIVE_ANIM = anim_player
 	var entity_pos = entity.board_position
 	var target_pos = target.board_position
 	if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
-		turn_finished.emit(stack)
 		return
 	if board[target_pos[0]][target_pos[1]] != null and board[target_pos[0]][target_pos[1]] != entity:
-		var anim_player = entity.get_node("AnimationPlayer")
+		if !entity.preview:
+			entity_actions.show_preview()
+		else:
+			entity_actions.hide_preview()
 		if anim_player != null:
 			await animate_attack(entity.board_position, target.board_position, anim_player)
-		if target != player.preview:
+		if target != player.preview and !is_finished:
+			is_finished = true
 			entity_actions.damage(target, entity.damage, board, player)
-			turn_finished.emit()
 
 func animate_attack(entity_pos, target_pos, anim_player):
 	var offset = entity_pos - target_pos

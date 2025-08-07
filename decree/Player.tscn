@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://umydvt437mmv"]
+[gd_scene load_steps=14 format=3 uid="uid://umydvt437mmv"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_pcjrc"]
 [ext_resource type="Texture2D" uid="uid://c62vr6u8sm8yl" path="res://player.png" id="2_blolq"]
@@ -9,6 +9,7 @@
 [ext_resource type="Animation" uid="uid://ckh3odkgsjb0o" path="res://attack_left.res" id="6_cije5"]
 [ext_resource type="Animation" uid="uid://bfpkpmw4kk570" path="res://attack_right.res" id="7_8oesv"]
 [ext_resource type="Animation" uid="uid://d1aajrol8oo2r" path="res://attack_up.res" id="8_74rma"]
+[ext_resource type="PackedScene" uid="uid://gnu3kuytcu5w" path="res://crossout.tscn" id="10_5pujq"]
 
 [sub_resource type="Curve2D" id="Curve2D_qrdci"]
 resource_local_to_scene = true
@@ -57,3 +58,5 @@ offset = Vector2(8, 8)
 libraries = {
 "": SubResource("AnimationLibrary_vgyj2")
 }
+
+[node name="Crossout" parent="." instance=ExtResource("10_5pujq")]

@@ -5,6 +5,7 @@ var hp : int
 var is_enemy : bool
 var type : String
 var preview : Node2D
+var prev_pos : Vector2
 
 
 signal destroy_rock
@@ -24,3 +25,5 @@ func destroy():
 		destroy_rock.emit()
 		self.preview.queue_free()
 		self.queue_free()
+	else:
+		get_node("Crossout").visible = true

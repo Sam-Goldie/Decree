@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://gnu3kuytcu5w"]
+
+[node name="Crossout" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 1.0
+offset_bottom = 22.0
+rotation = -0.785398
+color = Color(1, 0, 0, 1)
+
+[node name="ColorRect2" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 15.0
+offset_right = 16.0
+offset_bottom = 21.0
+rotation = 0.785398
+color = Color(1, 0, 0, 1)

@@ -1,0 +1,39 @@
+[gd_scene load_steps=8 format=3 uid="uid://dtrvvd6ndxgrt"]
+
+[ext_resource type="Script" path="res://bull.gd" id="1_1gh1d"]
+[ext_resource type="Script" path="res://path_follow_2d.gd" id="2_sauw8"]
+[ext_resource type="Texture2D" uid="uid://c06dq8cd8knx7" path="res://bull.png" id="3_lnb27"]
+[ext_resource type="Script" path="res://health_display.gd" id="3_tphse"]
+[ext_resource type="PackedScene" uid="uid://gnu3kuytcu5w" path="res://crossout.tscn" id="6_x1rpi"]
+[ext_resource type="PackedScene" uid="uid://drxtkedfmor55" path="res://entity_animator.tscn" id="8_nwo4s"]
+
+[sub_resource type="Curve2D" id="Curve2D_igqy1"]
+
+[node name="Bull2" type="Node2D"]
+script = ExtResource("1_1gh1d")
+
+[node name="Path2D" type="Path2D" parent="."]
+curve = SubResource("Curve2D_igqy1")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="Path2D"]
+script = ExtResource("2_sauw8")
+
+[node name="Sprite2D" type="Sprite2D" parent="Path2D/PathFollow2D"]
+z_index = 1
+texture = ExtResource("3_lnb27")
+offset = Vector2(8, 8)
+
+[node name="HealthDisplay" type="Control" parent="Path2D/PathFollow2D/Sprite2D"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("3_tphse")
+
+[node name="TurnOrder" type="Label" parent="Path2D/PathFollow2D/Sprite2D"]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="AnimationPlayer" parent="." instance=ExtResource("8_nwo4s")]
+
+[node name="Crossout" parent="." instance=ExtResource("6_x1rpi")]
