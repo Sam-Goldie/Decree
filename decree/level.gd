@@ -22,11 +22,11 @@ var player = Globals.PLAYER
 @onready
 var player_start = Vector2i(2,2)
 @onready
-var warrior_count = 1
+var warrior_count = 2
 @onready
-var archer_count = 0
+var archer_count = 1
 @onready
-var bull_count = 0
+var bull_count = 1
 @onready
 var enemies = Globals.ENEMIES
 @onready

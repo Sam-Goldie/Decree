@@ -25,6 +25,7 @@ var running_tweens = Globals.RUNNING_TWEENS
 var entity_actions = entity_actions_scene.new() 
 var bulls = Globals.BULLS
 var player = Globals.PLAYER
+var is_finished = false
 
 func _ready():
 	$Path2D/PathFollow2D/Sprite2D/HealthDisplay.initiate(hp)
@@ -63,6 +64,7 @@ func find_targets(board, _player):
 		return board[target_pos[0]][target_pos[1]]
 
 func take_turn(board, target_player, stack, board_pos):
+	is_finished = false
 	var dest = plan_move(board, target_player)
 	var target
 	if dest != null and dest != board_position:
@@ -79,6 +81,8 @@ func take_turn(board, target_player, stack, board_pos):
 	turn_finished.emit()
 	
 func attack(entity, target, board, player, stack):
+	var anim_player = entity.get_node("AnimationPlayer")
+	Globals.ACTIVE_ANIM = anim_player
 	var entity_pos = entity.board_position
 	var target_pos = target.board_position
 	if !is_instance_valid(entity) or !is_in_range(entity_pos, target_pos, entity.range):
@@ -89,11 +93,11 @@ func attack(entity, target, board, player, stack):
 			entity_actions.show_preview()
 		else:
 			entity_actions.hide_preview()
-		var anim_player = entity.get_node("AnimationPlayer")
 		if anim_player != null:
 			await animate_attack(entity.board_position, target.board_position, anim_player)
 			#target = player if entity.preview else player.preview
-		if target != player.preview:
+		if target != player.preview and !is_finished:
+			is_finished = true
 			entity_actions.damage(target, entity.damage, board, player)
 
 func animate_attack(entity_pos, target_pos, anim_player):

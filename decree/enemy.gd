@@ -161,8 +161,7 @@ func attack(entity, target, board, player, stack):
 			entity_actions.hide_preview()
 		if anim_player != null:
 			await animate_attack(entity.board_position, target.board_position, anim_player)
-		var progress = anim_player.get_current_animation_position()
-		if target != player.preview and anim_player.get_current_animation_length() - anim_player.get_current_animation_position() == 0 and !is_finished:
+		if target != player.preview and !is_finished:
 			is_finished = true
 			entity_actions.damage(target, entity.damage, board, player)
 
